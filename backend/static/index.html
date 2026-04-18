@@ -356,83 +356,164 @@ textarea.form-input{resize:vertical;min-height:120px;line-height:1.7}
 .submit-area{margin-top:30px}
 .submit-area .btn-primary{width:100%;font-size:17px;padding:16px}
 
-/* ===== Page 3: Analyzing ===== */
+/* ===== Page 3: Analyzing (挤牙膏实时播报) ===== */
 #analyzing-page{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  min-height:100vh;text-align:center;
+  display:flex;flex-direction:column;align-items:center;
+  min-height:100vh;padding:20px 16px 40px;
 }
 #analyzing-page.active{display:flex}
 
-.analyzing-animation{position:relative;width:200px;height:200px;margin-bottom:30px}
-.headphone-emoji{
-  font-size:80px;position:absolute;
-  top:50%;left:50%;transform:translate(-50%,-50%);
-  animation:headphoneBob 2s ease-in-out infinite;
+/* 顶部固定进度条 */
+.analyze-top-bar{
+  position:sticky;top:0;z-index:10;width:100%;max-width:420px;
+  background:rgba(18,18,24,0.95);backdrop-filter:blur(10px);
+  padding:16px 0 12px;text-align:center;
+}
+.analyze-top-title{font-size:16px;font-weight:700;margin-bottom:8px}
+.analyze-top-title .headphone-mini{
+  display:inline-block;animation:headphoneBob 2s ease-in-out infinite;
 }
 @keyframes headphoneBob{
-  0%,100%{transform:translate(-50%,-50%) rotate(-5deg)}
-  50%{transform:translate(-50%,-50%) rotate(5deg)}
+  0%,100%{transform:rotate(-5deg)} 50%{transform:rotate(5deg)}
 }
-.sound-wave{
-  position:absolute;top:50%;left:50%;
-  width:160px;height:160px;
-  transform:translate(-50%,-50%);
-  border-radius:50%;
-  border:2px solid var(--red);
-  opacity:0;
-  animation:waveExpand 2s ease-out infinite;
-}
-.sound-wave:nth-child(2){animation-delay:0.5s;border-color:var(--cyan)}
-.sound-wave:nth-child(3){animation-delay:1s;border-color:var(--yellow)}
-@keyframes waveExpand{
-  0%{width:80px;height:80px;opacity:0.6}
-  100%{width:200px;height:200px;opacity:0}
-}
-
-.analyzing-text{font-size:18px;font-weight:700;margin-bottom:12px}
-.analyzing-step{font-size:13px;color:var(--text-dim);margin-bottom:30px}
-
-.bubble-container{
-  width:100%;max-width:320px;min-height:60px;
-  position:relative;
-}
-.roast-bubble{
-  padding:12px 18px;border-radius:16px;
-  font-size:13px;line-height:1.6;
-  animation:bubbleFadeIn 0.5s ease;
-  margin-bottom:12px;max-width:280px;
-}
-@keyframes bubbleFadeIn{
-  from{opacity:0;transform:translateY(10px)}
-  to{opacity:1;transform:translateY(0)}
-}
-.roast-bubble.ding{
-  background:rgba(255,45,85,0.15);color:var(--red);
-  border:1px solid rgba(255,45,85,0.3);
-  margin-right:auto;border-bottom-left-radius:4px;
-}
-.roast-bubble.liang{
-  background:rgba(0,229,255,0.15);color:var(--cyan);
-  border:1px solid rgba(0,229,255,0.3);
-  margin-left:auto;border-bottom-right-radius:4px;
-}
-.bubble-name{font-size:11px;font-weight:700;margin-bottom:4px}
-
-/* Progress bar */
-.progress-container{
-  width:100%;max-width:280px;margin-top:20px;
-}
-.progress-bar{
-  height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;
-}
+.progress-container{width:100%;max-width:380px;margin:0 auto}
+.progress-bar{height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden}
 .progress-fill{
   height:100%;width:0%;border-radius:2px;
   background:linear-gradient(90deg,var(--red),var(--cyan));
-  transition:width 0.5s ease;
+  transition:width 0.6s ease;
 }
 .progress-label{
   display:flex;justify-content:space-between;
   font-size:11px;color:var(--text-dim);margin-top:6px;
+}
+
+/* 分析卡片流 */
+.analysis-feed{
+  width:100%;max-width:420px;margin-top:16px;
+  display:flex;flex-direction:column;gap:14px;
+}
+.analysis-card{
+  padding:16px 18px;border-radius:14px;
+  animation:cardSlideIn 0.6s cubic-bezier(0.22,1,0.36,1);
+  border:1px solid rgba(255,255,255,0.08);
+}
+@keyframes cardSlideIn{
+  from{opacity:0;transform:translateY(24px) scale(0.96)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+/* 各类型卡片 */
+.analysis-card.step-info{
+  background:rgba(255,255,255,0.04);
+}
+.analysis-card.step-lyrics{
+  background:linear-gradient(135deg,rgba(255,45,85,0.08),rgba(0,229,255,0.08));
+  border-color:rgba(255,45,85,0.2);
+}
+.analysis-card.step-audio{
+  background:linear-gradient(135deg,rgba(0,229,255,0.1),rgba(124,77,255,0.08));
+  border-color:rgba(0,229,255,0.2);
+}
+.analysis-card.step-ding{
+  background:rgba(255,45,85,0.08);
+  border-color:rgba(255,45,85,0.25);
+}
+.analysis-card.step-liang{
+  background:rgba(0,229,255,0.08);
+  border-color:rgba(0,229,255,0.25);
+}
+.analysis-card.step-verdict{
+  background:linear-gradient(135deg,rgba(255,45,85,0.12),rgba(0,229,255,0.12));
+  border-color:rgba(255,214,0,0.3);
+  text-align:center;
+}
+
+.card-header{
+  display:flex;align-items:center;gap:8px;margin-bottom:10px;
+  font-size:13px;font-weight:700;
+}
+.card-header .card-icon{font-size:18px}
+.card-header .card-label{color:var(--text-dim);font-weight:400;font-size:11px;margin-left:auto}
+.card-body{font-size:13px;line-height:1.8;color:var(--text-soft)}
+.card-body strong{color:var(--text-main);font-weight:600}
+.card-body .highlight-red{color:var(--red);font-weight:600}
+.card-body .highlight-cyan{color:var(--cyan);font-weight:600}
+.card-body .highlight-yellow{color:var(--yellow);font-weight:600}
+
+/* 歌词摘抄卡 */
+.lyric-excerpt{
+  font-style:italic;color:var(--text-dim);
+  border-left:3px solid var(--red);
+  padding:8px 12px;margin:8px 0;
+  font-size:12px;line-height:1.8;
+  background:rgba(255,255,255,0.03);
+  border-radius:0 8px 8px 0;
+}
+
+/* 音频特征卡里的数据条 */
+.feature-bars{margin-top:10px}
+.feature-bar{margin-bottom:10px}
+.feature-bar-label{
+  display:flex;justify-content:space-between;
+  font-size:11px;margin-bottom:4px;
+}
+.feature-bar-label span:first-child{color:var(--text-soft)}
+.feature-bar-label span:last-child{color:var(--cyan);font-weight:700}
+.feature-bar-track{
+  height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;
+}
+.feature-bar-fill{
+  height:100%;border-radius:3px;
+  transition:width 1s cubic-bezier(0.22,1,0.36,1);
+  width:0%;
+}
+.feature-bar-fill.bar-red{background:linear-gradient(90deg,var(--red),#ff6b8a)}
+.feature-bar-fill.bar-cyan{background:linear-gradient(90deg,var(--cyan),#80e5ff)}
+.feature-bar-fill.bar-yellow{background:linear-gradient(90deg,var(--yellow),#ffe066)}
+.feature-bar-fill.bar-purple{background:linear-gradient(90deg,#7c4dff,#b388ff)}
+
+/* 乐评人吐槽泡泡（在卡片内） */
+.critic-bubble{
+  display:flex;gap:10px;align-items:flex-start;
+}
+.critic-bubble .critic-avatar{
+  font-size:24px;flex-shrink:0;
+  width:36px;height:36px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:50%;
+}
+.critic-bubble.ding .critic-avatar{background:rgba(255,45,85,0.2)}
+.critic-bubble.liang .critic-avatar{background:rgba(0,229,255,0.2)}
+.critic-bubble .critic-words{
+  font-size:13px;line-height:1.7;
+}
+.critic-bubble .critic-words .critic-name{
+  font-weight:700;font-size:12px;margin-bottom:4px;
+}
+.critic-bubble.ding .critic-words .critic-name{color:var(--red)}
+.critic-bubble.liang .critic-words .critic-name{color:var(--cyan)}
+
+/* 打字机效果 */
+.typewriter-cursor{
+  display:inline-block;width:2px;height:14px;
+  background:var(--text-main);margin-left:2px;
+  animation:blink 0.8s step-end infinite;
+  vertical-align:text-bottom;
+}
+@keyframes blink{50%{opacity:0}}
+
+/* 加载中的小点 */
+.loading-dots::after{
+  content:'...';animation:dots 1.5s steps(4,end) infinite;
+}
+@keyframes dots{
+  0%{content:''} 25%{content:'.'} 50%{content:'..'} 75%{content:'...'}
+}
+
+/* 最终判决摇晃动画 */
+.verdict-shake{animation:verdictShake 0.5s ease}
+@keyframes verdictShake{
+  0%,100%{transform:rotate(0)} 25%{transform:rotate(-2deg)} 75%{transform:rotate(2deg)}
 }
 
 /* ===== Page 4: Result ===== */
@@ -930,27 +1011,24 @@ textarea.form-input{resize:vertical;min-height:120px;line-height:1.7}
   </div>
 </div>
 
-<!-- ==================== PAGE 3: ANALYZING ==================== -->
+<!-- ==================== PAGE 3: ANALYZING (挤牙膏实时播报) ==================== -->
 <div id="analyzing-page" class="page">
-  <div class="analyzing-animation">
-    <div class="sound-wave"></div>
-    <div class="sound-wave"></div>
-    <div class="sound-wave"></div>
-    <div class="headphone-emoji">🎧</div>
-  </div>
-  
-  <div class="analyzing-text">乐评人正在仔细听...</div>
-  <div class="analyzing-step" id="analyze-step">正在分析歌词内容</div>
-  
-  <div class="bubble-container" id="bubble-container"></div>
-
-  <div class="progress-container">
-    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
-    <div class="progress-label">
-      <span id="progress-text">分析中</span>
-      <span id="progress-percent">0%</span>
+  <!-- 顶部固定进度条 -->
+  <div class="analyze-top-bar">
+    <div class="analyze-top-title">
+      <span class="headphone-mini">🎧</span> 乐评人正在仔细听...
+    </div>
+    <div class="progress-container">
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="progress-label">
+        <span id="progress-text">正在接收作品</span>
+        <span id="progress-percent">0%</span>
+      </div>
     </div>
   </div>
+
+  <!-- 分析卡片流 -->
+  <div class="analysis-feed" id="analysis-feed"></div>
 </div>
 
 <!-- ==================== PAGE 4: RESULT ==================== -->
@@ -1428,188 +1506,438 @@ async function startAnalyze(mode) {
   };
 
   showPage('analyzing-page');
+  runSmartAnalysis(mode, songName, artistName, coverSrc, lyrics);
+}
 
-  // 如果后端可用，走真实 API
-  if (backendAvailable) {
-    runAnalysisWithBackend(mode, songName, artistName, coverSrc, lyrics);
+// ===== 🎯 挤牙膏式实时分析播报系统 =====
+
+// 工具函数：添加分析卡片到 feed
+function addAnalysisCard(type, html) {
+  const feed = document.getElementById('analysis-feed');
+  const card = document.createElement('div');
+  card.className = 'analysis-card step-' + type;
+  card.innerHTML = html;
+  feed.appendChild(card);
+  // 自动滚动到底部
+  setTimeout(() => card.scrollIntoView({behavior:'smooth', block:'end'}), 100);
+  return card;
+}
+
+// 工具函数：更新进度
+function updateProgress(percent, text) {
+  document.getElementById('progress-fill').style.width = percent + '%';
+  document.getElementById('progress-percent').textContent = Math.round(percent) + '%';
+  if (text) document.getElementById('progress-text').textContent = text;
+}
+
+// 工具函数：等待
+function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// 工具函数：打字机效果（返回 Promise）
+function typeInElement(el, text, speed) {
+  speed = speed || 30;
+  return new Promise(resolve => {
+    let i = 0;
+    const cursor = document.createElement('span');
+    cursor.className = 'typewriter-cursor';
+    el.textContent = '';
+    el.appendChild(cursor);
+    const iv = setInterval(() => {
+      if (i < text.length) {
+        el.insertBefore(document.createTextNode(text[i]), cursor);
+        i++;
+      } else {
+        clearInterval(iv);
+        if (cursor.parentNode) cursor.remove();
+        resolve();
+      }
+    }, speed);
+  });
+}
+
+// 歌词分析片段生成
+function generateLyricsInsights(lyrics, songName) {
+  if (!lyrics || lyrics.trim().length < 10) {
+    return {
+      excerpt: '（歌词信息不足）',
+      wordCount: 0,
+      themes: ['未知'],
+      rhymeComment: '歌词信息不足，无法进行韵律分析。',
+      emotionComment: '等听完音频再说。'
+    };
+  }
+  const lines = lyrics.split(/\n/).filter(l => l.trim().length > 0 && !l.match(/^\[/));
+  const wordCount = lyrics.replace(/[\s\n\r]/g, '').length;
+  const top3 = lines.slice(0, 3).join('\n');
+
+  // 简单主题检测
+  const themeMap = [
+    {kw:['爱','心','想你','思念','牵挂','拥抱','吻'], theme:'爱情'},
+    {kw:['梦','远方','飞','翅膀','自由','未来','路'], theme:'梦想/远方'},
+    {kw:['痛','泪','哭','离开','分手','再见','忘'], theme:'伤感/离别'},
+    {kw:['夜','月','星','灯','酒','雨','风'], theme:'夜/意境'},
+    {kw:['我','自己','一个人','孤独','独'], theme:'自我表达'},
+    {kw:['世界','天','地','阳光','花','春'], theme:'生活感悟'},
+  ];
+  const themes = [];
+  for (const t of themeMap) {
+    if (t.kw.some(k => lyrics.includes(k))) themes.push(t.theme);
+  }
+  if (themes.length === 0) themes.push('独特视角');
+
+  // 押韵检测
+  const endChars = lines.map(l => l.trim().slice(-1));
+  let rhymeCount = 0;
+  for (let i = 1; i < endChars.length; i++) {
+    if (endChars[i] === endChars[i-1]) rhymeCount++;
+  }
+  const rhymeRate = lines.length > 1 ? rhymeCount / (lines.length - 1) : 0;
+
+  const rhymeComments = [
+    rhymeRate > 0.4 ? '押韵密度较高，读起来有节奏感，但要小心过度押韵导致词义牵强。' :
+    rhymeRate > 0.15 ? '押韵节制得当，在韵律和表达之间找到了平衡。' :
+    '几乎没有押韵，走的是散文化路线。这可以是风格选择，也可以是偷懒。'
+  ];
+
+  const emotionComments = [
+    themes.includes('伤感/离别') ? '整体情绪偏向忧郁低沉，当代华语歌最不缺的就是这种调调了。' :
+    themes.includes('爱情') ? '又是爱情主题。全中国有八亿首情歌，你这首凭什么让人记住？' :
+    themes.includes('梦想/远方') ? '梦想和远方？这种主题写好了是信仰，写差了是鸡汤。' :
+    '主题倒是不太常见，至少不是烂大街的那几种。'
+  ];
+
+  return {
+    excerpt: top3,
+    wordCount,
+    lineCount: lines.length,
+    themes: themes.slice(0, 3),
+    rhymeComment: rhymeComments[0],
+    emotionComment: emotionComments[0]
+  };
+}
+
+// 生成伪音频特征（用于前端模拟模式，让等待更有内容感）
+function generateFakeAudioFeatures(songName) {
+  const bpm = Math.floor(Math.random() * 80) + 70; // 70-150
+  const keys = ['C大调','D大调','E小调','F大调','G大调','A小调','B小调','降E大调','降B大调'];
+  const key = keys[Math.floor(Math.random() * keys.length)];
+  const energy = (Math.random() * 0.6 + 0.3).toFixed(2);
+  const vocal = (Math.random() * 0.5 + 0.4).toFixed(2);
+
+  const bpmComment = bpm > 130 ? '节奏偏快，有舞曲特征，或者只是慌张。' :
+    bpm > 100 ? '中速偏快，流行歌的安全区间。' :
+    bpm > 80 ? '中慢速，抒情ballad的标准配置。' :
+    '慢速，如果不是情绪深沉就是催眠。';
+
+  const energyVal = parseFloat(energy);
+  const energyComment = energyVal > 0.7 ? '能量值很高，整首歌都在"喊"，动态范围堪忧。' :
+    energyVal > 0.5 ? '能量适中，起码知道歌曲需要呼吸。' :
+    '能量偏低，要么是极简主义，要么就是没录好。';
+
+  return { bpm, key, energy: energyVal, vocal: parseFloat(vocal), bpmComment, energyComment };
+}
+
+// ===== 主函数：挤牙膏式分析 =====
+async function runSmartAnalysis(mode, songName, artistName, coverSrc, lyrics) {
+  const feed = document.getElementById('analysis-feed');
+  feed.innerHTML = '';
+  updateProgress(0, '正在接收作品');
+
+  // ======= 第 1 步（0-10%）：接收作品确认 =======
+  await wait(600);
+  addAnalysisCard('info', `
+    <div class="card-header">
+      <span class="card-icon">📋</span> 作品已接收
+      <span class="card-label">STEP 1/7</span>
+    </div>
+    <div class="card-body">
+      <strong>${songName}</strong> — ${artistName}<br>
+      输入方式：${mode === 'link' ? '🔗 QQ音乐链接' : '📁 MP3 上传'}<br>
+      <span style="color:var(--text-dim);font-size:11px">两位乐评人已就位，即将开始审听...</span>
+    </div>
+  `);
+  updateProgress(8, '作品已接收');
+  await wait(1200);
+
+  // ======= 第 2 步（10-25%）：歌词初审 =======
+  updateProgress(12, '正在审阅歌词');
+  const lyricsData = generateLyricsInsights(lyrics, songName);
+  await wait(800);
+
+  addAnalysisCard('lyrics', `
+    <div class="card-header">
+      <span class="card-icon">📝</span> 歌词初审
+      <span class="card-label">STEP 2/7</span>
+    </div>
+    <div class="card-body">
+      ${lyricsData.wordCount > 0 ? `共 <strong>${lyricsData.lineCount} 行</strong>，约 <strong>${lyricsData.wordCount}</strong> 字` : '歌词信息不足'}
+      ${lyricsData.excerpt !== '（歌词信息不足）' ? `<div class="lyric-excerpt">${lyricsData.excerpt.replace(/\n/g, '<br>')}</div>` : ''}
+      检测到主题倾向：${lyricsData.themes.map(t => `<span class="highlight-yellow">${t}</span>`).join(' / ')}
+    </div>
+  `);
+  updateProgress(20, '歌词初审中');
+  await wait(1500);
+
+  // 丁大升对歌词的第一反应
+  const dingLyricsReaction = lyricsData.themes.includes('爱情') ?
+    '又是情歌？中国乐坛最不缺的就是这个。好歌词应该让人忘记它是歌词，你这个……先继续听吧。' :
+    lyricsData.themes.includes('伤感/离别') ?
+    '一上来就苦大仇深。行，我看看你到底有多少真东西，还是纯粹在无病呻吟。' :
+    lyricsData.wordCount > 200 ?
+    '字还挺多。就怕字多想法少，我先忍着往下看。' :
+    '歌词不长。要么是惜字如金，要么是实在没什么可写的。';
+
+  addAnalysisCard('ding', `
+    <div class="critic-bubble ding">
+      <div class="critic-avatar">🔥</div>
+      <div class="critic-words">
+        <div class="critic-name">丁大升 · 初看歌词</div>
+        <div id="ding-lyrics-reaction"></div>
+      </div>
+    </div>
+  `);
+  await typeInElement(document.getElementById('ding-lyrics-reaction'), dingLyricsReaction, 25);
+  updateProgress(25, '歌词分析完成');
+  await wait(1000);
+
+  // ======= 第 3 步（25-40%）：韵律分析 =======
+  updateProgress(28, '正在分析韵律结构');
+  await wait(800);
+
+  addAnalysisCard('lyrics', `
+    <div class="card-header">
+      <span class="card-icon">🎼</span> 韵律与情感分析
+      <span class="card-label">STEP 3/7</span>
+    </div>
+    <div class="card-body">
+      <strong>押韵分析：</strong>${lyricsData.rhymeComment}<br><br>
+      <strong>情感基调：</strong>${lyricsData.emotionComment}
+    </div>
+  `);
+  updateProgress(38, '韵律分析完成');
+  await wait(1200);
+
+  // 良缘对歌词的反应
+  const liangLyricsReaction = lyricsData.themes.includes('爱情') ?
+    '爱情永远是安全的选择。但安全也意味着你必须在细节上做到极致，否则就是平庸的复制品。让我看看你有没有自己的语言。' :
+    lyricsData.wordCount < 100 ?
+    '很克制。我喜欢知道什么时候闭嘴的创作者——前提是，沉默的部分确实有力量，而不是无话可说。' :
+    '有一些句子我愿意多看一遍。但也有些句子……算了，先听完音乐再下结论。';
+
+  addAnalysisCard('liang', `
+    <div class="critic-bubble liang">
+      <div class="critic-avatar">🗡️</div>
+      <div class="critic-words">
+        <div class="critic-name">良缘 · 歌词印象</div>
+        <div id="liang-lyrics-reaction"></div>
+      </div>
+    </div>
+  `);
+  await typeInElement(document.getElementById('liang-lyrics-reaction'), liangLyricsReaction, 25);
+  updateProgress(42, '正在分析音频特征');
+  await wait(800);
+
+  // ======= 第 4 步（40-60%）：音频特征分析 =======
+  let audioData;
+  let apiResult = null;
+
+  // 后端请求和音频分析并行展示
+  const backendPromise = backendAvailable ? callBackendAPI(mode, songName, artistName, coverSrc, lyrics) : null;
+
+  if (mode === 'upload') {
+    audioData = generateFakeAudioFeatures(songName);
+    updateProgress(45, '正在提取音频特征');
+    await wait(600);
+
+    const audioCard = addAnalysisCard('audio', `
+      <div class="card-header">
+        <span class="card-icon">🔊</span> 音频特征提取
+        <span class="card-label">STEP 4/7</span>
+      </div>
+      <div class="card-body">
+        <div class="feature-bars">
+          <div class="feature-bar">
+            <div class="feature-bar-label"><span>BPM 节拍速度</span><span>${audioData.bpm}</span></div>
+            <div class="feature-bar-track"><div class="feature-bar-fill bar-red" id="bar-bpm"></div></div>
+          </div>
+          <div class="feature-bar">
+            <div class="feature-bar-label"><span>调性</span><span>${audioData.key}</span></div>
+            <div class="feature-bar-track"><div class="feature-bar-fill bar-cyan" id="bar-key" style="width:100%"></div></div>
+          </div>
+          <div class="feature-bar">
+            <div class="feature-bar-label"><span>能量密度</span><span>${Math.round(audioData.energy*100)}%</span></div>
+            <div class="feature-bar-track"><div class="feature-bar-fill bar-yellow" id="bar-energy"></div></div>
+          </div>
+          <div class="feature-bar">
+            <div class="feature-bar-label"><span>人声清晰度</span><span>${Math.round(audioData.vocal*100)}%</span></div>
+            <div class="feature-bar-track"><div class="feature-bar-fill bar-purple" id="bar-vocal"></div></div>
+          </div>
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:var(--text-dim)">
+          ${audioData.bpmComment}<br>${audioData.energyComment}
+        </div>
+      </div>
+    `);
+
+    // 动画展开进度条
+    await wait(200);
+    document.getElementById('bar-bpm').style.width = Math.min(audioData.bpm / 1.8, 100) + '%';
+    document.getElementById('bar-energy').style.width = (audioData.energy * 100) + '%';
+    document.getElementById('bar-vocal').style.width = (audioData.vocal * 100) + '%';
+    updateProgress(55, '音频特征提取完成');
   } else {
-    runAnalysis();
+    updateProgress(48, '正在获取歌曲信息');
+    await wait(600);
+    addAnalysisCard('audio', `
+      <div class="card-header">
+        <span class="card-icon">🔗</span> QQ 音乐歌曲信息
+        <span class="card-label">STEP 4/7</span>
+      </div>
+      <div class="card-body">
+        链接模式：基于歌词和歌曲元信息进行分析<br>
+        <span style="color:var(--text-dim);font-size:11px">（上传 MP3 可获得更详细的音频分析数据）</span>
+      </div>
+    `);
+    updateProgress(55, '歌曲信息获取完成');
   }
-}
+  await wait(1200);
 
-// ===== 后端 API 调用 =====
-async function runAnalysisWithBackend(mode, songName, artistName, coverSrc, lyrics) {
-  const fill = document.getElementById('progress-fill');
-  const stepEl = document.getElementById('analyze-step');
-  const percentEl = document.getElementById('progress-percent');
-  const container = document.getElementById('bubble-container');
-  container.innerHTML = '';
+  // ======= 第 5 步（60-75%）：丁大升深度审听 =======
+  updateProgress(60, '丁大升正在组织毒舌语言');
+  await wait(500);
 
-  let progress = 0;
-  let stepIdx = 0;
-  let bubbleIdx = 0;
+  const dingListening = mode === 'upload' ?
+    (audioData.energy > 0.7 ?
+      '这编曲跟开拖拉机一样，从头轰到尾。混音师是不是只会推推子往上拉？动态在哪里？呼吸在哪里？一首歌如果没有安静的时刻，喧嚣就失去了意义。' :
+      audioData.bpm > 130 ?
+      '节奏倒是挺赶的，跟赶着投胎似的。快不等于有能量，快而空洞只能说明你没东西可表达，只好用速度来糊弄。' :
+      '节奏倒是慢下来了。问题是，慢得有没有道理？慢速不是让你磨洋工的借口，每一秒都要有信息量。') :
+    '不上传音频让我怎么仔细听？好吧，光看歌词和信息，我已经有些想法了。等我措辞措辞，免得说得太直接你接受不了——算了，谁在乎你接不接受得了。';
 
-  // 进度动画（真实后端请求期间播放）
-  const progressInterval = setInterval(() => {
-    progress += Math.random() * 3 + 1;
-    if (progress > 90) progress = 90;
-    fill.style.width = progress + '%';
-    percentEl.textContent = Math.round(progress) + '%';
-    const newStep = Math.floor(progress / (100 / ANALYZE_STEPS.length));
-    if (newStep !== stepIdx && newStep < ANALYZE_STEPS.length) {
-      stepIdx = newStep;
-      stepEl.textContent = ANALYZE_STEPS[stepIdx];
+  addAnalysisCard('ding', `
+    <div class="critic-bubble ding">
+      <div class="critic-avatar">🔥</div>
+      <div class="critic-words">
+        <div class="critic-name">丁大升 · 深度审听</div>
+        <div id="ding-deep-reaction"></div>
+      </div>
+    </div>
+  `);
+  await typeInElement(document.getElementById('ding-deep-reaction'), dingListening, 22);
+  updateProgress(72, '丁大升审听完毕');
+  await wait(800);
+
+  // ======= 第 6 步（75-88%）：良缘深度审听 =======
+  updateProgress(76, '良缘正在磨刀');
+  await wait(500);
+
+  const liangListening = mode === 'upload' ?
+    (audioData.vocal > 0.7 ?
+      '人声确实很突出。但"突出"不等于"好"——我听到了音准，听到了气息，唯独没听到……你到底想说什么。技术是为表达服务的，不是反过来。' :
+      '编曲和人声的关系很微妙。有些瞬间它们在对话，有些瞬间它们在吵架。统一性不够，说明你还没想清楚这首歌的核心情绪是什么。') :
+    '仅凭歌词来评价一首歌，就像只看剧本不看演出。但好的剧本有自己的力量。让我看看你的文字能不能独立站住。';
+
+  addAnalysisCard('liang', `
+    <div class="critic-bubble liang">
+      <div class="critic-avatar">🗡️</div>
+      <div class="critic-words">
+        <div class="critic-name">良缘 · 深度审听</div>
+        <div id="liang-deep-reaction"></div>
+      </div>
+    </div>
+  `);
+  await typeInElement(document.getElementById('liang-deep-reaction'), liangListening, 22);
+  updateProgress(88, '乐评人审听完毕');
+  await wait(600);
+
+  // ======= 第 7 步（88-100%）：等待后端结果 / 生成最终辣评 =======
+  updateProgress(90, '正在生成最终辣评');
+
+  addAnalysisCard('verdict', `
+    <div class="card-header" style="justify-content:center">
+      <span class="card-icon">⚡</span> 正在生成最终判决<span class="loading-dots"></span>
+    </div>
+  `);
+
+  // 等待后端返回（如果有的话）
+  if (backendPromise) {
+    try {
+      apiResult = await backendPromise;
+    } catch(e) {
+      console.error('后端请求失败:', e);
+      backendAvailable = false;
     }
-  }, 600);
-
-  const bubbleInterval = setInterval(() => {
-    if (bubbleIdx >= ROAST_BUBBLES.length) { bubbleIdx = 0; container.innerHTML = ''; }
-    const b = ROAST_BUBBLES[bubbleIdx++];
-    const div = document.createElement('div');
-    div.className = 'roast-bubble ' + b.critic;
-    div.innerHTML = `<div class="bubble-name">${b.critic === 'ding' ? '🔥 丁大升' : '🗡️ 良缘'}</div>${b.text}`;
-    container.appendChild(div);
-    while (container.children.length > 3) container.removeChild(container.firstChild);
-  }, 2500);
-
-  try {
-    let result;
-
-    if (mode === 'upload') {
-      // 上传 MP3 文件到后端
-      const formData = new FormData();
-      const mp3File = document.getElementById('mp3-input').files[0];
-      formData.append('file', mp3File);
-      formData.append('song_name', songName);
-      formData.append('artist_name', artistName);
-      formData.append('lyrics', lyrics || '');
-      formData.append('device_id', getDeviceId());
-      formData.append('cover_url', coverSrc === DEFAULT_COVER ? '' : coverSrc);
-
-      const resp = await fetch(API_BASE + '/api/analyze/upload', {
-        method: 'POST',
-        body: formData
-      });
-
-      if (!resp.ok) throw new Error('后端返回错误: ' + resp.status);
-      result = await resp.json();
-
-    } else {
-      // QQ 音乐链接模式
-      const formData = new FormData();
-      formData.append('qq_music_url', document.getElementById('qq-link').value.trim());
-      formData.append('song_name', songName);
-      formData.append('artist_name', artistName);
-      formData.append('lyrics', lyrics || '');
-      formData.append('device_id', getDeviceId());
-      formData.append('cover_url', coverSrc === DEFAULT_COVER ? '' : coverSrc);
-
-      const resp = await fetch(API_BASE + '/api/analyze/link', {
-        method: 'POST',
-        body: formData
-      });
-
-      if (!resp.ok) throw new Error('后端返回错误: ' + resp.status);
-      result = await resp.json();
-    }
-
-    // 解析后端返回的结果
-    clearInterval(progressInterval);
-    clearInterval(bubbleInterval);
-    fill.style.width = '100%';
-    percentEl.textContent = '100%';
-    stepEl.textContent = '辣评生成完毕！';
-
-    // 映射后端返回到 currentReview
-    currentReview.dingReview = result.ding.review;
-    currentReview.dingScores = result.ding.scores;
-    currentReview.dingTotal = result.ding.total;
-    currentReview.dingOneLiner = result.ding.one_liner;
-    currentReview.liangReview = result.liang.review;
-    currentReview.liangScores = result.liang.scores;
-    currentReview.liangTotal = result.liang.total;
-    currentReview.liangOneLiner = result.liang.one_liner;
-    currentReview.audioFeatures = result.audio_features || {};
-    currentReview.reviewId = result.id;
-
-    // Save to history
-    saveToHistory(currentReview);
-
-    setTimeout(() => {
-      showPage('result-page');
-      renderResult();
-    }, 800);
-
-  } catch (err) {
-    clearInterval(progressInterval);
-    clearInterval(bubbleInterval);
-    console.error('后端请求失败:', err);
-    showToast('⚠️ 后端请求失败，切换到本地模拟模式');
-    // 降级到本地模拟
-    backendAvailable = false;
-    fill.style.width = '0%';
-    percentEl.textContent = '0%';
-    runAnalysis();
   }
+
+  if (apiResult) {
+    // 使用后端真实结果
+    currentReview.dingReview = apiResult.ding.review;
+    currentReview.dingScores = apiResult.ding.scores;
+    currentReview.dingTotal = apiResult.ding.total;
+    currentReview.dingOneLiner = apiResult.ding.one_liner;
+    currentReview.liangReview = apiResult.liang.review;
+    currentReview.liangScores = apiResult.liang.scores;
+    currentReview.liangTotal = apiResult.liang.total;
+    currentReview.liangOneLiner = apiResult.liang.one_liner;
+    currentReview.audioFeatures = apiResult.audio_features || {};
+    currentReview.reviewId = apiResult.id;
+  } else {
+    // 本地模拟
+    generateReview();
+  }
+
+  await wait(800);
+  updateProgress(100, '辣评生成完毕！');
+
+  // 替换最后一张卡片为"判决出炉"
+  const lastCard = feed.lastElementChild;
+  lastCard.innerHTML = `
+    <div class="card-header" style="justify-content:center">
+      <span class="card-icon">🔥</span> 辣评已出炉！
+    </div>
+    <div class="card-body" style="font-size:15px;font-weight:700">
+      丁大升给出 <span class="highlight-red">${currentReview.dingTotal} 分</span>&nbsp;&nbsp;
+      良缘给出 <span class="highlight-cyan">${currentReview.liangTotal} 分</span><br>
+      <span style="font-size:12px;font-weight:400;color:var(--text-dim)">点击下方查看完整辣评 ↓</span>
+    </div>
+    <div style="margin-top:14px">
+      <button class="btn-primary" onclick="showPage('result-page');renderResult();" style="width:100%;font-size:15px;padding:14px;">
+        📖 查看完整辣评报告
+      </button>
+    </div>
+  `;
+  lastCard.classList.add('verdict-shake');
+  lastCard.scrollIntoView({behavior:'smooth', block:'end'});
+
+  // Save to history
+  saveToHistory(currentReview);
 }
 
-// ===== Analysis Animation (本地模拟模式 - 后端不可用时降级使用) =====
-function runAnalysis() {
-  const fill = document.getElementById('progress-fill');
-  const stepEl = document.getElementById('analyze-step');
-  const percentEl = document.getElementById('progress-percent');
-  const container = document.getElementById('bubble-container');
-  container.innerHTML = '';
-  
-  let progress = 0;
-  let stepIdx = 0;
-  let bubbleIdx = 0;
-  
-  const progressInterval = setInterval(() => {
-    progress += Math.random() * 8 + 2;
-    if (progress > 95) progress = 95;
-    fill.style.width = progress + '%';
-    percentEl.textContent = Math.round(progress) + '%';
-    
-    // Update step
-    const newStep = Math.floor(progress / (100 / ANALYZE_STEPS.length));
-    if (newStep !== stepIdx && newStep < ANALYZE_STEPS.length) {
-      stepIdx = newStep;
-      stepEl.textContent = ANALYZE_STEPS[stepIdx];
-    }
-  }, 400);
-  
-  // Show bubbles
-  const bubbleInterval = setInterval(() => {
-    if (bubbleIdx >= ROAST_BUBBLES.length) {
-      bubbleIdx = 0;
-      container.innerHTML = '';
-    }
-    const b = ROAST_BUBBLES[bubbleIdx++];
-    const div = document.createElement('div');
-    div.className = 'roast-bubble ' + b.critic;
-    div.innerHTML = `<div class="bubble-name">${b.critic === 'ding' ? '🔥 丁大升' : '🗡️ 良缘'}</div>${b.text}`;
-    container.appendChild(div);
-    // Keep only last 3
-    while (container.children.length > 3) container.removeChild(container.firstChild);
-  }, 2500);
-  
-  // Complete after 6 seconds
-  setTimeout(() => {
-    clearInterval(progressInterval);
-    clearInterval(bubbleInterval);
-    fill.style.width = '100%';
-    percentEl.textContent = '100%';
-    stepEl.textContent = '辣评生成完毕！';
-    
-    setTimeout(() => {
-      generateReview();
-      showPage('result-page');
-    }, 800);
-  }, 6000);
+// 后端 API 调用（异步，不阻塞前端播报）
+async function callBackendAPI(mode, songName, artistName, coverSrc, lyrics) {
+  const formData = new FormData();
+  formData.append('song_name', songName);
+  formData.append('artist_name', artistName);
+  formData.append('lyrics', lyrics || '');
+  formData.append('device_id', getDeviceId());
+  formData.append('cover_url', coverSrc === DEFAULT_COVER ? '' : coverSrc);
+
+  let url;
+  if (mode === 'upload') {
+    const mp3File = document.getElementById('mp3-input').files[0];
+    formData.append('file', mp3File);
+    url = API_BASE + '/api/analyze/upload';
+  } else {
+    formData.append('qq_music_url', document.getElementById('qq-link').value.trim());
+    url = API_BASE + '/api/analyze/link';
+  }
+
+  const resp = await fetch(url, { method: 'POST', body: formData });
+  if (!resp.ok) throw new Error('Backend error: ' + resp.status);
+  return await resp.json();
 }
 
-// ===== Generate Review (Mock) =====
+// ===== Generate Review (Mock - 后端不可用时降级) =====
 function generateReview() {
   const idx = Math.floor(Math.random() * 3);
   
@@ -1618,12 +1946,10 @@ function generateReview() {
   const liangReview = MOCK_REVIEWS.liang.reviews[idx];
   const liangScores = MOCK_REVIEWS.liang.scores[idx];
   
-  // Calculate totals
   const calcTotal = (s) => Math.round(s.melody * 0.25 + s.lyrics * 0.20 + s.arrangement * 0.20 + s.vocal * 0.20 + s.innovation * 0.15);
   const dingTotal = calcTotal(dingScores);
   const liangTotal = calcTotal(liangScores);
   
-  // Store in current review
   currentReview.dingReview = dingReview;
   currentReview.dingScores = dingScores;
   currentReview.dingTotal = dingTotal;
@@ -1631,11 +1957,7 @@ function generateReview() {
   currentReview.liangScores = liangScores;
   currentReview.liangTotal = liangTotal;
   
-  // Save to history
   saveToHistory(currentReview);
-  
-  // Render result
-  renderResult();
 }
 
 function renderResult() {
