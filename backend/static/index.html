@@ -1600,6 +1600,28 @@ async function startAnalyze(mode) {
     lyrics = document.getElementById('upload-lyrics').value;
   }
 
+  // ===== 去重检查：同一首歌只能评价一次，返回第一次的结果 =====
+  const existingReview = findExistingReview(songName, artistName);
+  if (existingReview) {
+    currentReview = {
+      songName: existingReview.songName,
+      artistName: existingReview.artistName,
+      coverSrc: existingReview.coverSrc || existingReview.coverUrl || DEFAULT_COVER,
+      qqMusicUrl: existingReview.qqMusicUrl || '',
+      dingReview: existingReview.dingReview,
+      dingScores: existingReview.dingScores,
+      dingTotal: existingReview.dingTotal,
+      liangReview: existingReview.liangReview,
+      liangScores: existingReview.liangScores,
+      liangTotal: existingReview.liangTotal,
+      timestamp: existingReview.timestamp
+    };
+    showPage('result-page');
+    renderResult();
+    showToast('这首歌已经被评过了，为你展示历史辣评');
+    return;
+  }
+
   // Store for result
   const qqMusicUrl = mode === 'link' ? (document.getElementById('qq-link').value.trim() || '') : '';
   currentReview = {
@@ -1609,6 +1631,19 @@ async function startAnalyze(mode) {
 
   showPage('analyzing-page');
   runSmartAnalysis(mode, songName, artistName, coverSrc, lyrics);
+}
+
+// ===== 去重：查找历史中是否已有同名歌曲 =====
+function findExistingReview(songName, artistName) {
+  const history = JSON.parse(localStorage.getItem('lapin_history') || '[]');
+  const normSong = songName.trim().toLowerCase();
+  const normArtist = artistName.trim().toLowerCase();
+  return history.find(h => {
+    const hSong = (h.songName || '').trim().toLowerCase();
+    const hArtist = (h.artistName || '').trim().toLowerCase();
+    // 歌名+歌手名完全匹配（忽略大小写）
+    return hSong === normSong && hArtist === normArtist;
+  }) || null;
 }
 
 // ===== 🎯 挤牙膏式实时分析播报系统 =====
@@ -2365,6 +2400,17 @@ function savePoster() {
 // ===== History =====
 function saveToHistory(review) {
   const history = JSON.parse(localStorage.getItem('lapin_history') || '[]');
+  // 去重：如果同名歌曲已存在，不重复保存
+  const normSong = (review.songName || '').trim().toLowerCase();
+  const normArtist = (review.artistName || '').trim().toLowerCase();
+  const existIdx = history.findIndex(h =>
+    (h.songName || '').trim().toLowerCase() === normSong &&
+    (h.artistName || '').trim().toLowerCase() === normArtist
+  );
+  if (existIdx !== -1) {
+    // 已存在，不覆盖，保留第一次的结果
+    return;
+  }
   history.unshift({
     id: Date.now(),
     songName: review.songName,

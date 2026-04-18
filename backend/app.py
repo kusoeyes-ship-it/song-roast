@@ -872,6 +872,40 @@ async def serve_index():
     return {"message": "Frontend not found. Place index.html in project root."}
 
 
+def _find_existing_review(song_name: str, artist_name: str):
+    """查找数据库中是否已有同名歌曲的评测记录。有则返回结果 dict，无则返回 None。"""
+    conn = sqlite3.connect(str(DB_PATH))
+    conn.row_factory = sqlite3.Row
+    row = conn.execute(
+        "SELECT * FROM reviews WHERE LOWER(song_name) = LOWER(?) AND LOWER(artist_name) = LOWER(?) ORDER BY created_at ASC LIMIT 1",
+        (song_name.strip(), artist_name.strip())
+    ).fetchone()
+    conn.close()
+    if not row:
+        return None
+    logger.info(f"Duplicate found: {song_name} - {artist_name}, returning existing review {row['id']}")
+    return {
+        "id": row["id"],
+        "song_name": row["song_name"],
+        "artist_name": row["artist_name"],
+        "cover_url": row["cover_url"] or "",
+        "audio_features": json.loads(row["audio_features"] or "{}"),
+        "ding": {
+            "review": row["ding_review"],
+            "scores": json.loads(row["ding_scores"] or "{}"),
+            "total": row["ding_total"],
+            "one_liner": ""
+        },
+        "liang": {
+            "review": row["liang_review"],
+            "scores": json.loads(row["liang_scores"] or "{}"),
+            "total": row["liang_total"],
+            "one_liner": ""
+        },
+        "duplicate": True  # 标记为重复
+    }
+
+
 @app.post("/api/analyze/upload")
 async def analyze_upload(
     file: UploadFile = File(...),
@@ -882,6 +916,11 @@ async def analyze_upload(
     cover_url: str = Form(""),
 ):
     """处理 MP3 上传 → 音频分析 → 生成辣评"""
+
+    # ===== 去重：同一首歌只保留第一次结果 =====
+    existing = _find_existing_review(song_name, artist_name)
+    if existing:
+        return existing
 
     # Validate file
     if not file.filename.lower().endswith(('.mp3', '.wav', '.m4a', '.flac', '.ogg')):
@@ -1234,6 +1273,11 @@ async def analyze_link(
 
     if not song_name:
         raise HTTPException(400, "请提供歌曲名称")
+
+    # ===== 去重：同一首歌只保留第一次结果 =====
+    existing = _find_existing_review(song_name, artist_name)
+    if existing:
+        return existing
 
     review_id = str(uuid.uuid4())[:8]
 
