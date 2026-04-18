@@ -2934,7 +2934,7 @@ async function getLeaderboardData(period) {
             rank: item.rank,
             song: item.song_name || '未命名',
             artist: item.artist_name || '未知',
-            avg: item.avg_score || 0,
+            avg: (item.avg_score || 0).toFixed ? (item.avg_score || 0).toFixed(2) : parseFloat(item.avg_score || 0).toFixed(2),
             roast: extractRoastEssence(worstReview)
           };
         });
@@ -2966,19 +2966,31 @@ async function getLeaderboardData(period) {
   
   if (!filtered.length) return [];
   
-  // 从低到高排序（最难听的排第一）
-  filtered.sort((a, b) => {
-    const avgA = (a.dingTotal + a.liangTotal) / 2;
-    const avgB = (b.dingTotal + b.liangTotal) / 2;
-    return avgA - avgB;
-  });
+  // 去重：同一首歌只保留分数更低的记录
+  const dedupMap = {};
+  for (const item of filtered) {
+    const key = ((item.songName || '') + '||' + (item.artistName || '')).toLowerCase();
+    const avg = ((item.dingTotal || 0) + (item.liangTotal || 0)) / 2;
+    if (!dedupMap[key] || avg < dedupMap[key].avg) {
+      dedupMap[key] = { ...item, avg };
+    }
+  }
+  const deduped = Object.values(dedupMap);
   
-  return filtered.slice(0, 10).map((item, i) => {
+  // 从低到高排序（最难听的排第一）
+  deduped.sort((a, b) => a.avg - b.avg);
+  
+  return deduped.slice(0, 10).map((item, i) => {
     const dingR = item.dingReview || '';
     const liangR = item.liangReview || '';
     const worstReview = (item.dingTotal || 99) <= (item.liangTotal || 99) ? dingR : liangR;
     return {
       rank: i + 1,
+      song: item.songName || '未命名',
+      artist: item.artistName || '未知',
+      avg: item.avg.toFixed(2),
+      roast: extractRoastEssence(worstReview)
+    };
       song: item.songName || '未命名',
       artist: item.artistName || '未知',
       avg: Math.round((item.dingTotal + item.liangTotal) / 2),

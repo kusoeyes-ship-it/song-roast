@@ -1540,16 +1540,25 @@ async def leaderboard(period: str = "day", limit: int = 10):
 
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
+    # 去重：同一首歌(song_name+artist_name)只保留均分最低的记录
     rows = conn.execute("""
-        SELECT id, song_name, artist_name, cover_url, qq_music_url,
-               ding_total, liang_total, ding_review, liang_review,
-               ROUND((COALESCE(ding_total, 0) + COALESCE(liang_total, 0)) / 2.0, 1) as avg_score,
-               created_at
-        FROM reviews
-        WHERE created_at >= ? AND ding_total IS NOT NULL AND liang_total IS NOT NULL
+        SELECT r.id, r.song_name, r.artist_name, r.cover_url, r.qq_music_url,
+               r.ding_total, r.liang_total, r.ding_review, r.liang_review,
+               ROUND((COALESCE(r.ding_total, 0) + COALESCE(r.liang_total, 0)) / 2.0, 2) as avg_score,
+               r.created_at
+        FROM reviews r
+        INNER JOIN (
+            SELECT LOWER(song_name) as lsn, LOWER(artist_name) as lan,
+                   MIN((COALESCE(ding_total, 0) + COALESCE(liang_total, 0)) / 2.0) as min_avg
+            FROM reviews
+            WHERE created_at >= ? AND ding_total IS NOT NULL AND liang_total IS NOT NULL
+            GROUP BY LOWER(song_name), LOWER(artist_name)
+        ) dedup ON LOWER(r.song_name) = dedup.lsn AND LOWER(r.artist_name) = dedup.lan
+                AND (COALESCE(r.ding_total, 0) + COALESCE(r.liang_total, 0)) / 2.0 = dedup.min_avg
+        WHERE r.created_at >= ? AND r.ding_total IS NOT NULL AND r.liang_total IS NOT NULL
         ORDER BY avg_score ASC
         LIMIT ?
-    """, (cutoff, limit)).fetchall()
+    """, (cutoff, cutoff, limit)).fetchall()
     conn.close()
 
     result = []
