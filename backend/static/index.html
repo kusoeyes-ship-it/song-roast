@@ -1325,9 +1325,9 @@ const MOCK_REVIEWS = {
       "说实话，这首歌让我意外。不是因为它好，而是因为它比我预想的更无聊。我以为独立音乐人至少会有点野心，结果交上来的是一首标准的「选秀晋级曲」——用力飙高音、副歌强行升key、Bridge来段假声转音。典型的杂技型歌曲，类似于胸口碎大石，毫无美感。音乐的本质是表达，不是炫技。"
     ],
     scores: [
-      {melody:45, lyrics:35, arrangement:40, vocal:50, innovation:25},
-      {melody:55, lyrics:30, arrangement:45, vocal:55, innovation:30},
-      {melody:50, lyrics:40, arrangement:35, vocal:60, innovation:20},
+      {melody:45, lyrics:35, arrangement:40, vocal:50, innovation:25, cover:30},
+      {melody:55, lyrics:30, arrangement:45, vocal:55, innovation:30, cover:35},
+      {melody:50, lyrics:40, arrangement:35, vocal:60, innovation:20, cover:25},
     ]
   },
   liang: {
@@ -1337,9 +1337,9 @@ const MOCK_REVIEWS = {
       "我一个字一个字地听了三遍。第一遍觉得平淡，第二遍发现了一些细节，第三遍……我承认，副歌的旋律走向确实有意思，特别是第二段副歌结尾那个半音下行，是整首歌最有灵气的瞬间。歌词还需要打磨，有些句子太刻意了，但核心的情感表达是真诚的。编曲偏保守，建议大胆一些。这是一首有潜力但还没完成的作品。"
     ],
     scores: [
-      {melody:55, lyrics:50, arrangement:48, vocal:60, innovation:35},
-      {melody:50, lyrics:35, arrangement:40, vocal:55, innovation:30},
-      {melody:70, lyrics:58, arrangement:52, vocal:65, innovation:55},
+      {melody:55, lyrics:50, arrangement:48, vocal:60, innovation:35, cover:45},
+      {melody:50, lyrics:35, arrangement:40, vocal:55, innovation:30, cover:40},
+      {melody:70, lyrics:58, arrangement:52, vocal:65, innovation:55, cover:60},
     ]
   }
 };
@@ -2158,7 +2158,7 @@ function generateReview() {
   const liangReview = MOCK_REVIEWS.liang.reviews[idx];
   const liangScores = MOCK_REVIEWS.liang.scores[idx];
   
-  const calcTotal = (s) => Math.round(s.melody * 0.25 + s.lyrics * 0.20 + s.arrangement * 0.20 + s.vocal * 0.20 + s.innovation * 0.15);
+  const calcTotal = (s) => Math.round((s.melody||0) * 0.20 + (s.lyrics||0) * 0.18 + (s.arrangement||0) * 0.18 + (s.vocal||0) * 0.18 + (s.innovation||0) * 0.12 + (s.cover||0) * 0.14);
   const dingTotal = calcTotal(dingScores);
   const liangTotal = calcTotal(liangScores);
   
@@ -2244,7 +2244,8 @@ function renderBreakdown(containerId, scores, critic) {
     {key:'lyrics', label:'📝 歌词'},
     {key:'arrangement', label:'🎹 编曲'},
     {key:'vocal', label:'🎤 人声'},
-    {key:'innovation', label:'✨ 创新'}
+    {key:'innovation', label:'✨ 创新'},
+    {key:'cover', label:'🖼️ 封面'}
   ];
   container.innerHTML = dims.map(d => `
     <div class="score-item">
@@ -2276,9 +2277,9 @@ function drawRadar(canvasId, scores, colorBase) {
   ctx.scale(2, 2);
   
   const cx = size / 2, cy = size / 2, r = size * 0.38;
-  const dims = ['melody', 'lyrics', 'arrangement', 'vocal', 'innovation'];
-  const labels = ['旋律', '歌词', '编曲', '人声', '创新'];
-  const n = 5;
+  const dims = ['melody', 'lyrics', 'arrangement', 'vocal', 'innovation', 'cover'];
+  const labels = ['旋律', '歌词', '编曲', '人声', '创新', '封面'];
+  const n = 6;
   
   // Background rings
   for (let ring = 1; ring <= 4; ring++) {
@@ -2383,9 +2384,9 @@ function drawDualRadar(canvasId, dScores, lScores) {
   ctx.scale(2, 2);
   
   const cx = size / 2, cy = size / 2, r = size * 0.35;
-  const dims = ['melody', 'lyrics', 'arrangement', 'vocal', 'innovation'];
-  const labels = ['旋律', '歌词', '编曲', '人声', '创新'];
-  const n = 5;
+  const dims = ['melody', 'lyrics', 'arrangement', 'vocal', 'innovation', 'cover'];
+  const labels = ['旋律', '歌词', '编曲', '人声', '创新', '封面'];
+  const n = 6;
   
   // Background
   for (let ring = 1; ring <= 4; ring++) {
