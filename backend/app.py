@@ -1505,7 +1505,46 @@ async def list_reviews(device_id: str = "anonymous", limit: int = 20):
     return [dict(r) for r in rows]
 
 
-@app.get("/api/health")
+@app.get("/api/leaderboard")
+async def leaderboard(period: str = "day", limit: int = 10):
+    """全局排行榜 - 所有用户的评测结果，按均分排序
+    period: day / week / month / all
+    """
+    from datetime import datetime, timedelta
+
+    now = datetime.now()
+    if period == "day":
+        cutoff = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+    elif period == "week":
+        # 本周一 0 点
+        monday = now - timedelta(days=now.weekday())
+        cutoff = monday.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+    elif period == "month":
+        cutoff = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat()
+    else:
+        cutoff = "2000-01-01T00:00:00"
+
+    conn = sqlite3.connect(str(DB_PATH))
+    conn.row_factory = sqlite3.Row
+    rows = conn.execute("""
+        SELECT id, song_name, artist_name, cover_url, qq_music_url,
+               ding_total, liang_total,
+               ROUND((COALESCE(ding_total, 0) + COALESCE(liang_total, 0)) / 2.0, 1) as avg_score,
+               created_at
+        FROM reviews
+        WHERE created_at >= ? AND ding_total IS NOT NULL AND liang_total IS NOT NULL
+        ORDER BY avg_score DESC
+        LIMIT ?
+    """, (cutoff, limit)).fetchall()
+    conn.close()
+
+    result = []
+    for i, r in enumerate(rows):
+        item = dict(r)
+        item["rank"] = i + 1
+        result.append(item)
+
+    return result
 async def health():
     return {
         "status": "ok",

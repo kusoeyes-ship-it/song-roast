@@ -2715,17 +2715,39 @@ function checkAndShowShameSong(avgScore) {
   section.style.display = 'block';
 }
 
-// ===== Leaderboard (排行榜) - 基于真实提交数据 =====
+// ===== Leaderboard (排行榜) - 全局数据，从后端 API 获取 =====
 
-function getLeaderboardData(period) {
-  // 从 localStorage 读取所有历史评测记录
+async function getLeaderboardData(period) {
+  // 优先从后端获取全局排行榜
+  if (backendAvailable) {
+    try {
+      const resp = await fetch(API_BASE + '/api/leaderboard?period=' + period + '&limit=10', {
+        signal: AbortSignal.timeout(5000)
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        return data.map(item => ({
+          rank: item.rank,
+          song: item.song_name || '未命名',
+          artist: item.artist_name || '未知',
+          dingScore: item.ding_total || 0,
+          liangScore: item.liang_total || 0,
+          cover: item.cover_url || DEFAULT_COVER,
+          qqMusicUrl: item.qq_music_url || ''
+        }));
+      }
+    } catch(e) {
+      console.warn('排行榜 API 失败，降级到本地:', e);
+    }
+  }
+  
+  // 降级：从 localStorage 读取本地数据
   const allHistory = JSON.parse(localStorage.getItem('lapin_history') || '[]');
   if (!allHistory.length) return [];
   
-  // 按时间范围过滤
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  const startOfWeek = startOfDay - (now.getDay() || 7) * 86400000 + 86400000; // 本周一
+  const startOfWeek = startOfDay - (now.getDay() || 7) * 86400000 + 86400000;
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
   
   let cutoff;
@@ -2733,17 +2755,14 @@ function getLeaderboardData(period) {
   else if (period === 'week') cutoff = startOfWeek;
   else cutoff = startOfMonth;
   
-  // 过滤时间范围内的记录
   const filtered = allHistory.filter(item => {
     let ts = item.timestamp || 0;
-    // 兼容 ISO 字符串和毫秒数
     if (typeof ts === 'string') ts = new Date(ts).getTime();
     return ts >= cutoff && item.dingTotal && item.liangTotal;
   });
   
   if (!filtered.length) return [];
   
-  // 按均分降序排列，取前 10
   filtered.sort((a, b) => {
     const avgA = (a.dingTotal + a.liangTotal) / 2;
     const avgB = (b.dingTotal + b.liangTotal) / 2;
@@ -2770,9 +2789,13 @@ function switchLeaderboard(period, btn) {
   renderLeaderboard(period);
 }
 
-function renderLeaderboard(period) {
-  const data = getLeaderboardData(period);
+async function renderLeaderboard(period) {
   const container = document.getElementById('leaderboard-list');
+  
+  // 加载中提示
+  container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-dim);font-size:13px;">加载中...</div>';
+  
+  const data = await getLeaderboardData(period);
   
   if (!data.length) {
     const periodName = period === 'day' ? '今日' : period === 'week' ? '本周' : '本月';
