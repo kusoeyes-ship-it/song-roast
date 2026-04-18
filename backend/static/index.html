@@ -277,7 +277,7 @@ body::after{
 .leaderboard-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .leaderboard-title{
   font-size:18px;font-weight:800;
-  background:linear-gradient(135deg,var(--yellow),var(--orange));
+  background:linear-gradient(135deg,var(--red),var(--orange));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;
   letter-spacing:1px;
 }
@@ -289,21 +289,20 @@ body::after{
   transition:all 0.4s var(--ease-out-expo);
 }
 .lb-tab.active{
-  background:linear-gradient(135deg,var(--yellow),var(--orange));
-  color:#000;border-color:transparent;
-  box-shadow:0 4px 12px rgba(255,225,53,0.2);
+  background:linear-gradient(135deg,var(--red),var(--orange));
+  color:#fff;border-color:transparent;
+  box-shadow:0 4px 12px rgba(255,45,85,0.25);
 }
 .lb-tab:hover:not(.active){border-color:rgba(255,255,255,0.15)}
-.leaderboard-list{display:flex;flex-direction:column;gap:8px}
+.leaderboard-list{display:flex;flex-direction:column;gap:10px}
 .lb-item{
-  display:flex;align-items:center;gap:12px;padding:12px 14px;
-  background:var(--glass);border-radius:12px;
+  display:flex;align-items:flex-start;gap:12px;padding:14px 16px;
+  background:var(--glass);border-radius:14px;
   border:1px solid var(--glass-border);
   transition:all 0.3s var(--ease-out-expo);
   backdrop-filter:blur(8px);
 }
 .lb-item:hover{
-  transform:translateX(4px);
   background:rgba(255,255,255,0.08);
   border-color:rgba(255,255,255,0.12);
 }
@@ -311,26 +310,35 @@ body::after{
   width:28px;height:28px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
   font-size:13px;font-weight:900;flex-shrink:0;
-  line-height:1;
+  line-height:1;margin-top:2px;
+}
+.lb-rank.gold{background:linear-gradient(135deg,#ff2d55,#ff6b35);color:#fff}
+.lb-rank.silver{background:linear-gradient(135deg,#ff6b35,#ff9500);color:#fff}
+.lb-rank.bronze{background:linear-gradient(135deg,#ff9500,#ffcc00);color:#000}
+.lb-rank.normal{background:rgba(255,255,255,0.08);color:var(--text-dim)}
+.lb-info{flex:1;min-width:0}
+.lb-song-line{
+  font-size:14px;font-weight:700;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  margin-bottom:6px;
+}
+.lb-song-line .lb-artist{
+  font-weight:400;color:var(--text-dim);font-size:12px;margin-left:4px;
+}
+.lb-roast{
+  font-size:12px;line-height:1.6;color:rgba(255,255,255,0.55);
+  font-style:italic;
+  display:-webkit-box;-webkit-line-clamp:2;
+  -webkit-box-orient:vertical;overflow:hidden;
+}
+.lb-avg{
+  flex-shrink:0;font-size:22px;font-weight:900;
+  color:var(--red);margin-top:2px;margin-left:8px;
+  text-shadow:0 0 20px rgba(255,45,85,0.3);
+}
 }
 .lb-rank.gold{background:linear-gradient(135deg,#ffd700,#ffaa00);color:#000;box-shadow:0 2px 8px rgba(255,215,0,0.3)}
 .lb-rank.silver{background:linear-gradient(135deg,#c0c0c0,#a0a0a0);color:#000}
-.lb-rank.bronze{background:linear-gradient(135deg,#cd7f32,#b8690f);color:#fff}
-.lb-rank.normal{background:rgba(255,255,255,0.06);color:var(--text-dim)}
-.lb-cover{width:42px;height:42px;border-radius:8px;object-fit:cover;flex-shrink:0}
-.lb-info{flex:1;min-width:0}
-.lb-song{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lb-artist{font-size:11px;color:var(--text-dim);margin-top:2px}
-.lb-scores{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0}
-.lb-score-d{font-size:12px;color:var(--red);font-weight:700}
-.lb-score-l{font-size:12px;color:var(--cyan);font-weight:700}
-.lb-listen{
-  flex-shrink:0;width:32px;height:32px;border-radius:50%;
-  background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;
-  font-size:14px;transition:all 0.4s var(--ease-out-expo);text-decoration:none;
-}
-.lb-listen:hover{background:var(--green);transform:scale(1.15);box-shadow:0 4px 12px rgba(34,197,94,0.3)}
-
 /* ===== Shame Song (推土歌) ===== */
 .shame-song-section{
   margin:24px 0;padding:24px;
@@ -1047,7 +1055,7 @@ textarea.form-input{resize:vertical;min-height:120px;line-height:1.7}
   <div class="leaderboard-section">
     <div class="torn-divider" style="margin:30px -20px 20px"></div>
     <div class="leaderboard-header">
-      <h3 class="leaderboard-title">🏆 辣评排行榜</h3>
+      <h3 class="leaderboard-title">💀 难听排行榜</h3>
       <div class="leaderboard-tabs">
         <button class="lb-tab active" onclick="switchLeaderboard('day',this)">日榜</button>
         <button class="lb-tab" onclick="switchLeaderboard('week',this)">周榜</button>
@@ -2891,10 +2899,25 @@ function checkAndShowShameSong(avgScore) {
   section.style.display = 'block';
 }
 
-// ===== Leaderboard (排行榜) - 全局数据，从后端 API 获取 =====
+// ===== Leaderboard (难听排行榜) - 分数从低到高，最难听的排第一 =====
+
+// 从辣评中提取精髓一句话
+function extractRoastEssence(review) {
+  if (!review) return '"难听到无话可说"';
+  // 按句号、感叹号、问号分句
+  const sentences = review.split(/[。！？!?]+/).filter(s => s.trim().length > 4);
+  if (!sentences.length) return '"' + review.slice(0, 45) + '"';
+  // 找最毒的一句（8-40字优先，否则取第一句）
+  let best = sentences[0].trim();
+  for (const s of sentences) {
+    const t = s.trim();
+    if (t.length >= 8 && t.length <= 40) { best = t; break; }
+  }
+  return '"' + best.slice(0, 45) + (best.length > 45 ? '…' : '') + '"';
+}
 
 async function getLeaderboardData(period) {
-  // 优先从后端获取全局排行榜
+  // 优先从后端获取全局排行榜（已按 avg_score ASC 排序）
   if (backendAvailable) {
     try {
       const resp = await fetch(API_BASE + '/api/leaderboard?period=' + period + '&limit=10', {
@@ -2902,15 +2925,19 @@ async function getLeaderboardData(period) {
       });
       if (resp.ok) {
         const data = await resp.json();
-        return data.map(item => ({
-          rank: item.rank,
-          song: item.song_name || '未命名',
-          artist: item.artist_name || '未知',
-          dingScore: item.ding_total || 0,
-          liangScore: item.liang_total || 0,
-          cover: item.cover_url || DEFAULT_COVER,
-          qqMusicUrl: item.qq_music_url || ''
-        }));
+        return data.map(item => {
+          const dingR = item.ding_review || '';
+          const liangR = item.liang_review || '';
+          // 选分更低的乐评人的评语作为"最难听精髓"
+          const worstReview = (item.ding_total || 99) <= (item.liang_total || 99) ? dingR : liangR;
+          return {
+            rank: item.rank,
+            song: item.song_name || '未命名',
+            artist: item.artist_name || '未知',
+            avg: item.avg_score || 0,
+            roast: extractRoastEssence(worstReview)
+          };
+        });
       }
     } catch(e) {
       console.warn('排行榜 API 失败，降级到本地:', e);
@@ -2939,21 +2966,25 @@ async function getLeaderboardData(period) {
   
   if (!filtered.length) return [];
   
+  // 从低到高排序（最难听的排第一）
   filtered.sort((a, b) => {
     const avgA = (a.dingTotal + a.liangTotal) / 2;
     const avgB = (b.dingTotal + b.liangTotal) / 2;
-    return avgB - avgA;
+    return avgA - avgB;
   });
   
-  return filtered.slice(0, 10).map((item, i) => ({
-    rank: i + 1,
-    song: item.songName || '未命名',
-    artist: item.artistName || '未知',
-    dingScore: item.dingTotal || 0,
-    liangScore: item.liangTotal || 0,
-    cover: item.coverUrl || DEFAULT_COVER,
-    qqMusicUrl: item.qqMusicUrl || ''
-  }));
+  return filtered.slice(0, 10).map((item, i) => {
+    const dingR = item.dingReview || '';
+    const liangR = item.liangReview || '';
+    const worstReview = (item.dingTotal || 99) <= (item.liangTotal || 99) ? dingR : liangR;
+    return {
+      rank: i + 1,
+      song: item.songName || '未命名',
+      artist: item.artistName || '未知',
+      avg: Math.round((item.dingTotal + item.liangTotal) / 2),
+      roast: extractRoastEssence(worstReview)
+    };
+  });
 }
 
 let currentLeaderboardPeriod = 'day';
@@ -2968,7 +2999,6 @@ function switchLeaderboard(period, btn) {
 async function renderLeaderboard(period) {
   const container = document.getElementById('leaderboard-list');
   
-  // 加载中提示
   container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-dim);font-size:13px;">加载中...</div>';
   
   const data = await getLeaderboardData(period);
@@ -2977,10 +3007,10 @@ async function renderLeaderboard(period) {
     const periodName = period === 'day' ? '今日' : period === 'week' ? '本周' : '本月';
     container.innerHTML = `
       <div style="text-align:center;padding:30px 20px;color:var(--text-dim);">
-        <div style="font-size:36px;margin-bottom:12px;opacity:0.5">🎵</div>
+        <div style="font-size:36px;margin-bottom:12px;opacity:0.5">💀</div>
         <div style="font-size:14px;line-height:1.6;">
-          ${periodName}还没有人提交评测<br>
-          <span style="font-size:12px;opacity:0.7">成为第一个勇者，提交你的作品吧！</span>
+          ${periodName}还没有人敢来比拼<br>
+          <span style="font-size:12px;opacity:0.7">提交你的作品，争夺"最难听"宝座！</span>
         </div>
       </div>
     `;
@@ -2989,22 +3019,14 @@ async function renderLeaderboard(period) {
   
   container.innerHTML = data.map((item, i) => {
     const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : 'normal';
-    const avg = Math.round((item.dingScore + item.liangScore) / 2);
-    const listenUrl = item.qqMusicUrl || '#';
-    const listenAttr = item.qqMusicUrl ? `href="${listenUrl}" target="_blank"` : 'href="#" onclick="return false" style="opacity:0.3;cursor:default"';
     return `
       <div class="lb-item">
         <div class="lb-rank ${rankClass}">${item.rank}</div>
-        <img class="lb-cover" src="${item.cover}" alt="${item.song}" onerror="this.src='${DEFAULT_COVER}'">
         <div class="lb-info">
-          <div class="lb-song">${item.song}</div>
-          <div class="lb-artist">${item.artist} · 均分 ${avg}</div>
+          <div class="lb-song-line">${item.song}<span class="lb-artist">— ${item.artist}</span></div>
+          <div class="lb-roast">${item.roast}</div>
         </div>
-        <div class="lb-scores">
-          <span class="lb-score-d">🔥${item.dingScore}</span>
-          <span class="lb-score-l">🗡️${item.liangScore}</span>
-        </div>
-        <a ${listenAttr} class="lb-listen" title="试听">▶</a>
+        <div class="lb-avg">${item.avg}</div>
       </div>
     `;
   }).join('');

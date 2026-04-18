@@ -1542,12 +1542,12 @@ async def leaderboard(period: str = "day", limit: int = 10):
     conn.row_factory = sqlite3.Row
     rows = conn.execute("""
         SELECT id, song_name, artist_name, cover_url, qq_music_url,
-               ding_total, liang_total,
+               ding_total, liang_total, ding_review, liang_review,
                ROUND((COALESCE(ding_total, 0) + COALESCE(liang_total, 0)) / 2.0, 1) as avg_score,
                created_at
         FROM reviews
         WHERE created_at >= ? AND ding_total IS NOT NULL AND liang_total IS NOT NULL
-        ORDER BY avg_score DESC
+        ORDER BY avg_score ASC
         LIMIT ?
     """, (cutoff, limit)).fetchall()
     conn.close()
