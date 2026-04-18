@@ -276,7 +276,27 @@ input,textarea{font-family:inherit;outline:none}
 }
 
 /* ===== Page 2: Input ===== */
-#input-page{padding-top:20px}
+#input-page{padding:20px 16px 0}
+.input-step{
+  background:var(--bg-card);border-radius:12px;padding:16px;
+  margin-bottom:14px;border:1px solid rgba(255,255,255,0.06);
+}
+.step-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.step-num{
+  width:24px;height:24px;border-radius:50%;background:var(--yellow);color:#000;
+  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;flex-shrink:0;
+}
+.step-title{font-size:15px;font-weight:700;flex:1}
+.step-required{font-size:11px;color:var(--red);background:rgba(255,77,77,0.15);padding:2px 8px;border-radius:10px}
+.step-optional{font-size:11px;color:var(--cyan);background:rgba(78,205,196,0.15);padding:2px 8px;border-radius:10px}
+.btn-small{
+  padding:8px 16px;border-radius:8px;border:none;cursor:pointer;
+  font-size:13px;font-weight:600;
+}
+.btn-small.btn-cyan{background:var(--cyan);color:#000}
+.btn-small.btn-cyan:hover{opacity:0.85}
+.link-parsed .step-num{background:var(--cyan)}
+.link-parsed .step-optional{background:rgba(78,205,196,0.3)}
 
 .input-header{
   display:flex;align-items:center;gap:12px;margin-bottom:24px;
@@ -890,11 +910,8 @@ textarea.form-input{resize:vertical;min-height:120px;line-height:1.7}
   </div>
 
   <div class="home-actions">
-    <button class="btn-primary btn-red" onclick="showInput('link')">
-      🔗 粘贴 QQ 音乐链接
-    </button>
-    <button class="btn-primary btn-cyan" onclick="showInput('upload')">
-      🎵 上传 MP3 文件
+    <button class="btn-primary btn-red" onclick="showInput()">
+      🎤 开始辣评
     </button>
     <button class="btn-primary btn-outline" onclick="showHistory()">
       📋 历史评测记录
@@ -923,70 +940,74 @@ textarea.form-input{resize:vertical;min-height:120px;line-height:1.7}
   </div>
 </div>
 
-<!-- ==================== PAGE 2: INPUT ==================== -->
+<!-- ==================== PAGE 2: INPUT (统一模式) ==================== -->
 <div id="input-page" class="page">
   <div class="input-header">
     <button class="back-btn" onclick="showPage('home')">←</button>
     <h2>提交你的作品</h2>
   </div>
 
-  <div class="input-tabs">
-    <button class="input-tab active" onclick="switchInputTab('link')" id="tab-link">🔗 QQ音乐链接</button>
-    <button class="input-tab" onclick="switchInputTab('upload')" id="tab-upload">🎵 上传MP3</button>
-  </div>
-
-  <!-- Link Input -->
-  <div class="input-section active" id="section-link">
-    <div class="form-group">
-      <label class="form-label">QQ 音乐歌曲链接</label>
-      <input type="text" class="form-input" id="qq-link" 
-        placeholder="粘贴 QQ 音乐分享链接…">
+  <!-- Step 1: QQ 音乐链接（获取歌词和封面） -->
+  <div class="input-step">
+    <div class="step-header">
+      <span class="step-num">1</span>
+      <span class="step-title">QQ 音乐链接 <span style="color:var(--text-dim);font-size:12px">（获取歌曲信息 & 歌词）</span></span>
+      <span class="step-optional">可选</span>
     </div>
-    <div id="link-preview" style="display:none">
-      <div class="result-song-info" style="margin-bottom:16px">
-        <img class="result-cover" id="link-cover-preview" src="" alt="">
+    <div class="form-group">
+      <input type="text" class="form-input" id="qq-link" 
+        placeholder="粘贴 QQ 音乐分享链接，自动获取歌名/封面/歌词">
+    </div>
+    <button class="btn-small btn-cyan" onclick="parseLinkAndPreview()" id="btn-parse-link">
+      🔍 解析链接
+    </button>
+    <div id="link-preview" style="display:none;margin-top:12px">
+      <div class="result-song-info" style="margin-bottom:8px">
+        <img class="result-cover" id="link-cover-preview" src="" alt="" style="width:56px;height:56px;border-radius:8px">
         <div>
-          <div class="result-song-title" id="link-song-name"></div>
-          <div class="result-song-artist" id="link-artist-name"></div>
+          <div class="result-song-title" id="link-song-name" style="font-size:15px;font-weight:700"></div>
+          <div class="result-song-artist" id="link-artist-name" style="font-size:13px;color:var(--text-dim)"></div>
         </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">歌词（已自动获取，可编辑修正）</label>
-        <textarea class="form-input" id="link-lyrics" rows="6" placeholder="歌词内容…"></textarea>
-      </div>
-    </div>
-    <div class="submit-area">
-      <button class="btn-primary btn-red" onclick="parseLinkAndPreview()" id="btn-parse-link">
-        🔍 解析链接
-      </button>
+      <div style="color:#4ecdc4;font-size:12px">✅ 歌曲信息已获取</div>
     </div>
   </div>
 
-  <!-- Upload Input -->
-  <div class="input-section" id="section-upload">
+  <!-- Step 2: 上传音频 -->
+  <div class="input-step">
+    <div class="step-header">
+      <span class="step-num">2</span>
+      <span class="step-title">上传音频文件</span>
+      <span class="step-required">必填</span>
+    </div>
     <div class="form-group">
-      <label class="form-label">上传 MP3 文件（≤20MB）</label>
       <div class="upload-zone" id="mp3-zone" onclick="document.getElementById('mp3-input').click()">
         <div class="upload-icon">📂</div>
-        <div class="upload-text">点击选择或拖拽 <strong>MP3</strong> 文件</div>
-        <div class="upload-hint">支持 mp3 / wav / flac 格式</div>
+        <div class="upload-text">点击选择或拖拽音频文件</div>
+        <div class="upload-hint">支持 mp3 / wav / flac（≤20MB）</div>
         <div class="upload-filename" id="mp3-filename"></div>
         <input type="file" id="mp3-input" accept=".mp3,.wav,.flac" hidden>
       </div>
     </div>
+  </div>
 
+  <!-- Step 3: 歌曲信息（如果没有通过链接获取） -->
+  <div class="input-step" id="manual-info-section">
+    <div class="step-header">
+      <span class="step-num">3</span>
+      <span class="step-title">补充信息</span>
+      <span class="step-hint" style="color:var(--text-dim);font-size:11px">（已解析链接则自动填充）</span>
+    </div>
     <div class="form-group">
       <label class="form-label">歌曲名称 *</label>
       <input type="text" class="form-input" id="upload-song-name" placeholder="输入歌曲名称">
     </div>
-
     <div class="form-group">
       <label class="form-label">歌手/创作者名 *</label>
       <input type="text" class="form-input" id="upload-artist" placeholder="输入你的名字或艺名">
     </div>
-
     <div class="form-group">
-      <label class="form-label">封面图（可选，不传使用默认封面）</label>
+      <label class="form-label">封面图（可选）</label>
       <div class="cover-upload" id="cover-zone" onclick="document.getElementById('cover-input').click()">
         <img id="cover-preview" src="" alt="">
         <div class="cover-placeholder">
@@ -996,18 +1017,18 @@ textarea.form-input{resize:vertical;min-height:120px;line-height:1.7}
         <input type="file" id="cover-input" accept="image/*" hidden>
       </div>
     </div>
-
     <div class="form-group">
-      <label class="form-label">歌词（上传后将自动识别，也可手动输入）</label>
+      <label class="form-label">歌词 <span style="color:var(--text-dim);font-size:12px">（QQ音乐链接已解析则自动填充）</span></label>
       <textarea class="form-input" id="upload-lyrics" rows="6" 
-        placeholder="歌词将在上传音频后自动识别，您也可以直接在此输入或修正…"></textarea>
+        placeholder="粘贴歌词，或通过上方 QQ 音乐链接自动获取"></textarea>
     </div>
+  </div>
 
-    <div class="submit-area">
-      <button class="btn-primary btn-cyan" onclick="startAnalyze('upload')">
-        🚀 开始辣评
-      </button>
-    </div>
+  <!-- Submit -->
+  <div class="submit-area" style="margin-top:20px;padding-bottom:40px">
+    <button class="btn-primary btn-red" onclick="startAnalyze()" style="width:100%;font-size:18px;padding:16px">
+      🔥 开始辣评
+    </button>
   </div>
 </div>
 
@@ -1377,22 +1398,13 @@ function showPage(pageId) {
   window.scrollTo(0, 0);
 }
 
-function showInput(mode) {
+function showInput() {
   showPage('input-page');
-  switchInputTab(mode);
 }
 
 function showHistory() {
   showPage('history-page');
   renderHistory();
-}
-
-// ===== Input Tab Switch =====
-function switchInputTab(tab) {
-  document.querySelectorAll('.input-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.input-section').forEach(s => s.classList.remove('active'));
-  document.getElementById('tab-' + tab).classList.add('active');
-  document.getElementById('section-' + tab).classList.add('active');
 }
 
 // ===== File Upload Handlers =====
@@ -1481,37 +1493,38 @@ async function parseLinkAndPreview() {
   }
 
   if (parsed && parsed.song_name && parsed.song_name !== '未知歌曲') {
-    // 真实数据
+    // 解析成功：显示预览 + 自动填充下方表单
     document.getElementById('link-cover-preview').src = parsed.cover_url || DEFAULT_COVER;
     document.getElementById('link-song-name').textContent = parsed.song_name;
-    document.getElementById('link-artist-name').textContent = parsed.artist_name || '未知歌手';
-    document.getElementById('link-lyrics').value = parsed.lyrics || '（未获取到歌词，请手动粘贴）';
-    if (parsed.album_name) {
-      document.getElementById('link-artist-name').textContent += '  ·  ' + parsed.album_name;
+    const artistText = parsed.artist_name || '未知歌手';
+    document.getElementById('link-artist-name').textContent = 
+      artistText + (parsed.album_name ? '  ·  ' + parsed.album_name : '');
+    document.getElementById('link-preview').style.display = 'block';
+    
+    // 自动填充 Step 3 表单
+    document.getElementById('upload-song-name').value = parsed.song_name;
+    document.getElementById('upload-artist').value = parsed.artist_name || '';
+    if (parsed.lyrics) {
+      document.getElementById('upload-lyrics').value = parsed.lyrics;
     }
-    document.getElementById('link-preview').style.display = 'block';
-    showToast('✅ 解析成功！请检查歌词是否完整');
+    // 设置封面
+    if (parsed.cover_url) {
+      const coverImg = document.getElementById('cover-preview');
+      coverImg.src = parsed.cover_url;
+      coverImg.style.display = 'block';
+      const placeholder = document.querySelector('#cover-zone .cover-placeholder');
+      if (placeholder) placeholder.style.display = 'none';
+    }
+    
+    showToast('✅ 歌曲信息已自动填充！请上传音频文件后开始辣评');
+    btn.textContent = '✅ 已解析';
+    btn.disabled = false;
   } else {
-    // 解析失败，让用户手动填写
-    document.getElementById('link-cover-preview').src = DEFAULT_COVER;
-    document.getElementById('link-song-name').textContent = '（解析失败，请手动填写）';
-    document.getElementById('link-artist-name').textContent = '';
-    document.getElementById('link-lyrics').value = '';
-    document.getElementById('link-preview').style.display = 'block';
-    // 让歌名和歌手变为可编辑
-    document.getElementById('link-song-name').setAttribute('contenteditable', 'true');
-    document.getElementById('link-song-name').style.border = '1px dashed #ff6b6b';
-    document.getElementById('link-song-name').style.padding = '4px 8px';
-    document.getElementById('link-artist-name').setAttribute('contenteditable', 'true');
-    document.getElementById('link-artist-name').style.border = '1px dashed #4ecdc4';
-    document.getElementById('link-artist-name').style.padding = '4px 8px';
-    showToast('⚠️ 自动解析失败，请手动填写歌曲信息和歌词');
+    // 解析失败
+    showToast('⚠️ 解析失败，请手动填写歌曲信息');
+    btn.textContent = '🔍 解析链接';
+    btn.disabled = false;
   }
-
-  // Change button to submit
-  btn.textContent = '🚀 开始辣评';
-  btn.disabled = false;
-  btn.onclick = () => startAnalyze('link');
 }
 
 // 前端直接解析（JSONP 方式调 QQ 音乐 API，绕过 CORS）
@@ -1613,42 +1626,55 @@ async function parseLinkFrontend(url) {
   return null;
 }
 
-// ===== Start Analysis =====
-async function startAnalyze(mode) {
-  let songName, artistName, coverSrc, lyrics, coverDataUrl;
-
-  if (mode === 'link') {
-    songName = document.getElementById('link-song-name').textContent.trim();
-    artistName = document.getElementById('link-artist-name').textContent.trim().split('  ·  ')[0]; // 去掉专辑名
-    coverSrc = document.getElementById('link-cover-preview').src;
-    lyrics = document.getElementById('link-lyrics').value;
-    if (!songName || songName === '（解析失败，请手动填写）') {
-      showToast('请填写歌曲名称');
-      return;
-    }
-    if (!lyrics.trim()) {
-      showToast('请粘贴歌词内容');
-      return;
-    }
-  } else {
-    songName = document.getElementById('upload-song-name').value.trim();
-    artistName = document.getElementById('upload-artist').value.trim();
-    if (!songName || !artistName) {
-      showToast('请填写歌曲名称和歌手名');
-      return;
-    }
-    if (!document.getElementById('mp3-input').files.length) {
-      showToast('请先上传 MP3 文件');
-      return;
-    }
-    const coverImg = document.getElementById('cover-preview');
-    coverSrc = coverImg.src || DEFAULT_COVER;
-    coverDataUrl = coverImg.src || '';
-    if (!coverSrc || coverSrc === window.location.href) coverSrc = DEFAULT_COVER;
-    lyrics = document.getElementById('upload-lyrics').value;
+// ===== Start Analysis (统一模式) =====
+async function startAnalyze() {
+  // 获取表单数据
+  const songName = document.getElementById('upload-song-name').value.trim();
+  const artistName = document.getElementById('upload-artist').value.trim();
+  const lyrics = document.getElementById('upload-lyrics').value.trim();
+  const mp3File = document.getElementById('mp3-input').files[0];
+  const coverImg = document.getElementById('cover-preview');
+  const qqLink = document.getElementById('qq-link').value.trim();
+  
+  // 校验必填项
+  if (!songName) {
+    showToast('请填写歌曲名称');
+    return;
   }
-
-  // ===== 去重检查：同一首歌只能评价一次，返回第一次的结果 =====
+  if (!artistName) {
+    showToast('请填写歌手/创作者名');
+    return;
+  }
+  if (!mp3File) {
+    showToast('请上传音频文件');
+    return;
+  }
+  
+  // 音频文件校验
+  const validAudioTypes = ['audio/mpeg', 'audio/wav', 'audio/flac', 'audio/mp3', 'audio/x-wav', 'audio/x-flac'];
+  const ext = mp3File.name.split('.').pop().toLowerCase();
+  if (!validAudioTypes.includes(mp3File.type) && !['mp3','wav','flac'].includes(ext)) {
+    showValidationError('bad_audio');
+    return;
+  }
+  if (mp3File.size > 20 * 1024 * 1024) {
+    showToast('文件太大了，请上传 20MB 以内的音频');
+    return;
+  }
+  if (mp3File.size < 10 * 1024) {
+    showValidationError('short_audio');
+    return;
+  }
+  
+  // 封面
+  let coverSrc = DEFAULT_COVER;
+  let coverDataUrl = '';
+  if (coverImg.src && coverImg.src !== window.location.href && !coverImg.src.endsWith('undefined')) {
+    coverSrc = coverImg.src;
+    coverDataUrl = coverImg.src;
+  }
+  
+  // ===== 去重检查 =====
   const existingReview = findExistingReview(songName, artistName);
   if (existingReview) {
     currentReview = {
@@ -1671,14 +1697,15 @@ async function startAnalyze(mode) {
   }
 
   // Store for result
-  const qqMusicUrl = mode === 'link' ? (document.getElementById('qq-link').value.trim() || '') : '';
   currentReview = {
-    songName, artistName, coverSrc, lyrics, mode, qqMusicUrl,
+    songName, artistName, coverSrc, lyrics, 
+    mode: 'upload',  // 统一走 upload 模式（因为都有音频）
+    qqMusicUrl: qqLink,
     timestamp: Date.now()
   };
 
   showPage('analyzing-page');
-  runSmartAnalysis(mode, songName, artistName, coverSrc, lyrics);
+  runSmartAnalysis('upload', songName, artistName, coverSrc, lyrics);
 }
 
 // ===== 去重：查找历史中是否已有同名歌曲 =====
@@ -1837,7 +1864,7 @@ async function runSmartAnalysis(mode, songName, artistName, coverSrc, lyrics) {
     </div>
     <div class="card-body">
       <strong>${songName}</strong> — ${artistName}<br>
-      输入方式：${mode === 'link' ? '🔗 QQ音乐链接' : '📁 MP3 上传'}<br>
+      输入方式：🎵 音频上传 + 歌词分析<br>
       <span style="color:var(--text-dim);font-size:11px">两位乐评人已就位，即将开始审听...</span>
     </div>
   `);
@@ -1979,8 +2006,8 @@ async function runSmartAnalysis(mode, songName, artistName, coverSrc, lyrics) {
         <span class="card-label">STEP 4/7</span>
       </div>
       <div class="card-body">
-        链接模式：基于歌词和歌曲元信息进行分析<br>
-        <span style="color:var(--text-dim);font-size:11px">（上传 MP3 可获得更详细的音频分析数据）</span>
+        链接模式：基于音频特征和歌词进行综合分析<br>
+        <span style="color:var(--text-dim);font-size:11px">（正在提取 BPM、调性、能量等音频数据...）</span>
       </div>
     `);
     updateProgress(55, '歌曲信息获取完成');
