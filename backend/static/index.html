@@ -40,6 +40,7 @@ input,textarea{font-family:inherit;outline:none}
   animation:stickerFloat 3s ease-in-out infinite;
   filter:drop-shadow(0 2px 8px rgba(0,0,0,0.5));
   pointer-events:none;z-index:1;
+  max-height:50vh;
 }
 @keyframes stickerFloat{
   0%,100%{transform:translateY(0) rotate(var(--r,0deg))}
@@ -862,13 +863,11 @@ textarea.form-input{resize:vertical;min-height:120px;line-height:1.7}
 <div id="home" class="page active">
   <div class="home-bg"></div>
   
-  <!-- Stickers -->
+  <!-- Stickers (仅限顶部标题区域) -->
   <div class="sticker" style="top:15%;left:8%;--r:-15deg;animation-delay:0.2s">🎵</div>
   <div class="sticker" style="top:12%;right:10%;--r:12deg;animation-delay:0.8s">⚡</div>
-  <div class="sticker" style="top:45%;left:5%;--r:8deg;animation-delay:1.2s">🔥</div>
-  <div class="sticker" style="top:48%;right:6%;--r:-10deg;animation-delay:0.5s">💀</div>
-  <div class="sticker" style="bottom:30%;left:10%;--r:20deg;animation-delay:1s">🎤</div>
-  <div class="sticker" style="bottom:28%;right:8%;--r:-18deg;animation-delay:0.3s">✨</div>
+  <div class="sticker" style="top:38%;left:5%;--r:8deg;animation-delay:1.2s">🔥</div>
+  <div class="sticker" style="top:40%;right:6%;--r:-10deg;animation-delay:0.5s">💀</div>
 
   <div class="magazine-title">
     <h1>我的新歌<br>怎么样？</h1>
