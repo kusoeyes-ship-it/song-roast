@@ -156,6 +156,123 @@ input,textarea{font-family:inherit;outline:none}
   border-top:1px dashed rgba(255,255,255,0.1);
 }
 
+/* ===== Leaderboard ===== */
+.leaderboard-section{text-align:left;position:relative}
+.leaderboard-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.leaderboard-title{font-size:18px;font-weight:800;background:linear-gradient(135deg,var(--yellow),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.leaderboard-tabs{display:flex;gap:6px}
+.lb-tab{
+  padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;
+  background:rgba(255,255,255,0.06);color:var(--text-dim);border:1px solid transparent;
+  transition:all 0.3s;
+}
+.lb-tab.active{background:var(--yellow);color:#000;border-color:var(--yellow)}
+.lb-tab:hover{border-color:var(--yellow)}
+.leaderboard-list{display:flex;flex-direction:column;gap:8px}
+.lb-item{
+  display:flex;align-items:center;gap:12px;padding:12px;
+  background:var(--bg-card);border-radius:10px;
+  border:1px solid rgba(255,255,255,0.05);
+  transition:transform 0.2s;
+}
+.lb-item:hover{transform:translateX(4px)}
+.lb-rank{
+  width:28px;height:28px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:800;flex-shrink:0;
+}
+.lb-rank.gold{background:linear-gradient(135deg,#ffd700,#ffaa00);color:#000}
+.lb-rank.silver{background:linear-gradient(135deg,#c0c0c0,#a0a0a0);color:#000}
+.lb-rank.bronze{background:linear-gradient(135deg,#cd7f32,#b8690f);color:#fff}
+.lb-rank.normal{background:rgba(255,255,255,0.08);color:var(--text-dim)}
+.lb-cover{width:42px;height:42px;border-radius:6px;object-fit:cover;flex-shrink:0}
+.lb-info{flex:1;min-width:0}
+.lb-song{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-artist{font-size:11px;color:var(--text-dim);margin-top:2px}
+.lb-scores{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0}
+.lb-score-d{font-size:12px;color:var(--red);font-weight:700}
+.lb-score-l{font-size:12px;color:var(--cyan);font-weight:700}
+.lb-listen{
+  flex-shrink:0;width:32px;height:32px;border-radius:50%;
+  background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;
+  font-size:14px;transition:all 0.3s;text-decoration:none;
+}
+.lb-listen:hover{background:var(--green);transform:scale(1.1)}
+
+/* ===== Shame Song (推土歌) ===== */
+.shame-song-section{
+  margin:20px 0;padding:20px;
+  background:linear-gradient(135deg,rgba(255,45,85,0.08),rgba(255,107,53,0.08));
+  border-radius:16px;border:1px dashed rgba(255,45,85,0.3);
+  position:relative;overflow:hidden;
+  animation:shameGlow 2s ease-in-out infinite alternate;
+}
+@keyframes shameGlow{
+  0%{box-shadow:0 0 15px rgba(255,45,85,0.1)}
+  100%{box-shadow:0 0 25px rgba(255,45,85,0.2)}
+}
+.shame-header{text-align:center;margin-bottom:16px}
+.shame-icon{font-size:40px;margin-bottom:8px;animation:shameShake 0.5s ease-in-out infinite alternate}
+@keyframes shameShake{0%{transform:rotate(-5deg)}100%{transform:rotate(5deg)}}
+.shame-title-text{font-size:18px;font-weight:800;color:var(--red);margin-bottom:4px}
+.shame-subtitle{font-size:12px;color:var(--text-dim)}
+.shame-rec-card{
+  background:rgba(0,0,0,0.3);border-radius:12px;padding:16px;margin-bottom:12px;
+  border:1px solid rgba(255,255,255,0.05);
+}
+.shame-rec-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.shame-rec-cover{width:50px;height:50px;border-radius:8px;object-fit:cover}
+.shame-rec-info{flex:1}
+.shame-rec-song{font-size:15px;font-weight:700}
+.shame-rec-artist{font-size:12px;color:var(--text-dim);margin-top:2px}
+.shame-rec-comment{
+  font-size:13px;color:rgba(255,255,255,0.8);line-height:1.7;
+  padding:12px;background:rgba(255,255,255,0.03);border-radius:8px;
+  border-left:3px solid;margin-bottom:10px;font-style:italic;
+}
+.shame-rec-comment.ding{border-color:var(--red)}
+.shame-rec-comment.liang{border-color:var(--cyan)}
+.shame-rec-comment .comment-critic{font-size:11px;font-weight:700;margin-bottom:4px}
+.shame-rec-comment.ding .comment-critic{color:var(--red)}
+.shame-rec-comment.liang .comment-critic{color:var(--cyan)}
+.shame-player{
+  width:100%;border-radius:8px;overflow:hidden;margin-top:10px;
+  border:1px solid rgba(255,255,255,0.1);
+}
+.shame-player iframe{width:100%;height:86px;border:0}
+
+/* ===== Validation Error Modal ===== */
+.validation-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(8px);
+  z-index:9999;display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity 0.3s;
+}
+.validation-overlay.show{opacity:1;pointer-events:auto}
+.validation-modal{
+  width:340px;max-width:90%;padding:30px 24px;
+  background:#1a1a2e;border-radius:20px;
+  border:2px solid rgba(255,45,85,0.3);
+  text-align:center;transform:scale(0.8);
+  transition:transform 0.3s;
+}
+.validation-overlay.show .validation-modal{transform:scale(1)}
+.validation-emoji{font-size:48px;margin-bottom:16px}
+.validation-title{font-size:18px;font-weight:800;color:var(--red);margin-bottom:12px}
+.validation-roast{
+  font-size:14px;color:rgba(255,255,255,0.8);line-height:1.8;
+  margin-bottom:8px;padding:12px;background:rgba(255,255,255,0.04);border-radius:10px;
+  border-left:3px solid;text-align:left;
+}
+.validation-roast.ding{border-color:var(--red)}
+.validation-roast.liang{border-color:var(--cyan)}
+.validation-roast .vr-name{font-size:11px;font-weight:700;margin-bottom:4px}
+.validation-roast.ding .vr-name{color:var(--red)}
+.validation-roast.liang .vr-name{color:var(--cyan)}
+.validation-close{
+  margin-top:16px;padding:12px 40px;border-radius:30px;
+  background:var(--red);color:#fff;font-size:15px;font-weight:700;
+}
+
 /* ===== Page 2: Input ===== */
 #input-page{padding-top:20px}
 
@@ -703,6 +820,22 @@ textarea.form-input{resize:vertical;min-height:120px;line-height:1.7}
     </button>
   </div>
 
+  <!-- ===== 排行榜 ===== -->
+  <div class="leaderboard-section">
+    <div class="torn-divider" style="margin:30px -20px 20px"></div>
+    <div class="leaderboard-header">
+      <h3 class="leaderboard-title">🏆 辣评排行榜</h3>
+      <div class="leaderboard-tabs">
+        <button class="lb-tab active" onclick="switchLeaderboard('day',this)">日榜</button>
+        <button class="lb-tab" onclick="switchLeaderboard('week',this)">周榜</button>
+        <button class="lb-tab" onclick="switchLeaderboard('month',this)">月榜</button>
+      </div>
+    </div>
+    <div class="leaderboard-list" id="leaderboard-list">
+      <!-- 动态渲染 -->
+    </div>
+  </div>
+
   <div class="disclaimer">
     ⚠️ "丁大升"和"良缘"为 AI 虚拟乐评人角色，评价仅供娱乐参考，<br>
     不代表任何真实人物观点。音乐无绝对好坏，做自己喜欢的音乐最重要 ❤️
@@ -890,6 +1023,18 @@ textarea.form-input{resize:vertical;min-height:120px;line-height:1.7}
     <div class="score-diff" id="score-diff"></div>
   </div>
 
+  <!-- 推土歌反省区（低分触发） -->
+  <div class="shame-song-section" id="shame-section" style="display:none">
+    <div class="shame-header">
+      <div class="shame-icon">💀</div>
+      <div class="shame-title-text">反省时间到</div>
+      <div class="shame-subtitle">乐评人觉得你需要先听听这首歌</div>
+    </div>
+    <div class="shame-recommendation" id="shame-rec">
+      <!-- 动态渲染 -->
+    </div>
+  </div>
+
   <div class="result-actions">
     <button class="btn-primary btn-red" onclick="generatePoster()">🖼️ 生成分享海报</button>
     <button class="btn-primary btn-cyan" onclick="showPage('home')">🎵 换一首再战</button>
@@ -986,6 +1131,23 @@ textarea.form-input{resize:vertical;min-height:120px;line-height:1.7}
 
 <!-- Toast -->
 <div class="toast" id="toast"></div>
+
+<!-- 校验错误弹窗（乐评人吐槽） -->
+<div class="validation-overlay" id="validation-overlay" onclick="if(event.target===this)closeValidation()">
+  <div class="validation-modal">
+    <div class="validation-emoji" id="val-emoji">🙄</div>
+    <div class="validation-title" id="val-title">这是什么？</div>
+    <div class="validation-roast ding" id="val-ding-roast">
+      <div class="vr-name">🔥 丁大升</div>
+      <span id="val-ding-text"></span>
+    </div>
+    <div class="validation-roast liang" id="val-liang-roast">
+      <div class="vr-name">🗡️ 良缘</div>
+      <span id="val-liang-text"></span>
+    </div>
+    <button class="validation-close" onclick="closeValidation()">知道了，我重新来</button>
+  </div>
+</div>
 
 <!-- QR Code Lib (lightweight) -->
 <script>
@@ -1159,6 +1321,15 @@ function switchInputTab(tab) {
 document.getElementById('mp3-input').addEventListener('change', function(e) {
   const file = e.target.files[0];
   if (!file) return;
+  
+  // 校验音频文件格式
+  const validation = validateAudioFile(file);
+  if (!validation.valid) {
+    showValidationError(validation.error);
+    e.target.value = ''; // 清空选择
+    return;
+  }
+  
   if (file.size > 20 * 1024 * 1024) {
     showToast('⚠️ 文件不能超过 20MB');
     return;
@@ -1198,6 +1369,13 @@ function parseLinkAndPreview() {
     showToast('请先粘贴 QQ 音乐链接');
     return;
   }
+  
+  // 校验是否为 QQ 音乐链接
+  if (!validateQQLink(link)) {
+    showValidationError('bad_link');
+    return;
+  }
+  
   showToast('🔍 正在解析链接…');
   
   // Demo: simulate API response
@@ -1489,6 +1667,10 @@ function renderResult() {
   const diffEl = document.getElementById('score-diff');
   diffEl.textContent = `分差 ${diff} 分` + (diff > 20 ? ' 🔥 观点大碰撞！' : '');
   diffEl.className = 'score-diff' + (diff > 20 ? ' big' : '');
+
+  // 推土歌：平均分 < 50 触发
+  const avgScore = Math.round((r.dingTotal + r.liangTotal) / 2);
+  checkAndShowShameSong(avgScore);
 }
 
 // ===== Typewriter Effect =====
@@ -1831,6 +2013,246 @@ function showToast(msg) {
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 2500);
 }
+
+// ===== Validation: Link & Audio Check =====
+const VALID_QQ_DOMAINS = ['y.qq.com', 'i.y.qq.com', 'c.y.qq.com', 'kg.qq.com', 'music.qq.com'];
+const VALID_AUDIO_TYPES = ['audio/mpeg','audio/mp3','audio/wav','audio/ogg','audio/aac','audio/flac','audio/x-m4a','audio/mp4'];
+
+const VALIDATION_ROASTS = {
+  bad_link: {
+    ding: [
+      "你连 QQ 音乐链接都分不清，我对你的音乐品味已经有了一个基本判断。",
+      "这个链接跟 QQ 音乐有什么关系？就像你的歌跟音乐的关系一样——没有。",
+      "随便粘贴个链接就来了？做音乐也是这么随便的吗？"
+    ],
+    liang: [
+      "这不是一个有效的 QQ 音乐链接。但别灰心，至少你还会复制粘贴。",
+      "链接无效。我建议你先学会正确地分享一首歌，再来谈创作。",
+      "连分享音乐的第一步都走错了。不过没关系，路还长。"
+    ]
+  },
+  bad_audio: {
+    ding: [
+      "这是什么文件？你是不是把你的购物清单传上来了？我是乐评人，不是收银员。",
+      "如果这也算音频文件，那我家微波炉的运转声也能参加格莱美了。",
+      "上传一个正经的音频文件很难吗？做音乐之前先学学怎么用电脑吧。"
+    ],
+    liang: [
+      "这个文件不是音频格式。我很想评价你的作品，但前提是——你得先给我一个作品。",
+      "格式不对。音乐创作的第一步，是确保你的作品能被听到。目前你还在第零步。",
+      "我无法解析这个文件。就像有时候我也无法理解某些人为什么觉得自己能做音乐。"
+    ]
+  },
+  too_short: {
+    ding: [
+      "这也太短了吧？你是在做铃声还是做音乐？别浪费我时间。",
+      "不到几秒钟的东西你也好意思拿来评？我打个喷嚏都比这长。"
+    ],
+    liang: [
+      "这段音频太短了，短到我还没来得及产生任何情绪它就结束了。某种意义上，这也是一种才华。",
+      "作品长度不足以支撑一次有意义的评价。就像一个只有开头的故事，永远不会有人记住。"
+    ]
+  }
+};
+
+function validateQQLink(url) {
+  if (!url || !url.trim()) return false;
+  try {
+    const parsed = new URL(url.includes('://') ? url : 'https://' + url);
+    return VALID_QQ_DOMAINS.some(d => parsed.hostname === d || parsed.hostname.endsWith('.' + d));
+  } catch(e) {
+    return false;
+  }
+}
+
+function validateAudioFile(file) {
+  if (!file) return {valid:false, error:'bad_audio'};
+  const ext = file.name.split('.').pop().toLowerCase();
+  const validExts = ['mp3','wav','ogg','aac','flac','m4a','wma','ape'];
+  if (!VALID_AUDIO_TYPES.includes(file.type) && !validExts.includes(ext)) {
+    return {valid:false, error:'bad_audio'};
+  }
+  if (file.size < 50 * 1024) { // < 50KB probably not a real song
+    return {valid:false, error:'too_short'};
+  }
+  return {valid:true};
+}
+
+function showValidationError(errorType) {
+  const roasts = VALIDATION_ROASTS[errorType];
+  if (!roasts) return;
+  const dingText = roasts.ding[Math.floor(Math.random() * roasts.ding.length)];
+  const liangText = roasts.liang[Math.floor(Math.random() * roasts.liang.length)];
+
+  const titles = {
+    bad_link: '这不是 QQ 音乐链接',
+    bad_audio: '这不是音频文件',
+    too_short: '这也太短了吧'
+  };
+  const emojis = {bad_link: '🔗❌', bad_audio: '📎❓', too_short: '⏱️'};
+
+  document.getElementById('val-emoji').textContent = emojis[errorType] || '🙄';
+  document.getElementById('val-title').textContent = titles[errorType] || '出错了';
+  document.getElementById('val-ding-text').textContent = dingText;
+  document.getElementById('val-liang-text').textContent = liangText;
+  document.getElementById('validation-overlay').classList.add('show');
+}
+
+function closeValidation() {
+  document.getElementById('validation-overlay').classList.remove('show');
+}
+
+// ===== Shame Song (推土歌) System =====
+const SHAME_SONGS = [
+  {
+    name: '爱情买卖', artist: '慕容晓晓', songmid: '001qvvgZ0uCiBv',
+    cover: 'https://y.qq.com/music/photo_new/T002R300x300M000002jLMOr09IVhp_1.jpg',
+    ding_comment: "听听人家，旋律俗到骨子里，但人家俗得坦坦荡荡、俗得理直气壮。你呢？既想装高级又够不着，两头落空。先学学怎么把一首歌写到让十四亿人都能哼两句再说吧。",
+    liang_comment: "这首歌证明了一件事：真正的流行不需要伪装。它土吗？土。它有效吗？极其有效。有时候诚实的粗糙，胜过精致的空洞。你的作品缺的就是这种不计后果的真诚。"
+  },
+  {
+    name: '最炫民族风', artist: '凤凰传奇', songmid: '003MspSK2bElcQ',
+    cover: 'https://y.qq.com/music/photo_new/T002R300x300M000000CW7mf2FLpqD_1.jpg',
+    ding_comment: "凤凰传奇用最土的方式征服了最广的市场。你呢？用最装的方式感动了最小的圈子——就你自己。人家土得有底气，你连土都不够格。",
+    liang_comment: "民族风是一种态度，不是一种装饰。这首歌无论你怎么看它，都无法否认它拥有一种野蛮的生命力。你的作品里最缺的，恰恰就是这种生命力。"
+  },
+  {
+    name: '伤不起', artist: '王麟', songmid: '000U5gXn0l6PYT',
+    cover: 'https://y.qq.com/music/photo_new/T002R300x300M000001GLRPY1GcQfL_1.jpg',
+    ding_comment: "你看看这首歌，毫无技术含量，歌词直白到令人发指，但人家至少做到了一点：让人记住。你的歌呢？听了等于没听，存在感为零。",
+    liang_comment: "《伤不起》的成功不是因为它好，而是因为它精准地击中了某种集体情绪。这是一种能力。回头看看你的作品——它击中了什么？什么都没有。"
+  },
+  {
+    name: '两只蝴蝶', artist: '庞龙', songmid: '004QnDfl1qnJEd',
+    cover: 'https://y.qq.com/music/photo_new/T002R300x300M000000fxRvn1kxqBn_1.jpg',
+    ding_comment: "2004年的彩铃神曲，俗得透顶，但人家让整个中国都在哼。你连让一个人哼完你整首歌的能力都没有。先别急着看不起流行乐了，你连流行的门槛都没摸到。",
+    liang_comment: "庞龙在那个年代做了一件简单而正确的事：用最直接的方式传递情感。二十年后的你，拥有了更好的设备、更多的资源，做出来的东西却更加空洞。这值得反思。"
+  },
+  {
+    name: '小苹果', artist: '筷子兄弟', songmid: '002boMHf46dMeq',
+    cover: 'https://y.qq.com/music/photo_new/T002R300x300M000000SY5Rh0bYbuN_1.jpg',
+    ding_comment: "《小苹果》是被多少人嫌弃的歌？但你知道它的播放量是多少吗？面对现实吧——你嫌人家土，人家嫌你没人听。做音乐不是做学术论文，先学会跟人说话。",
+    liang_comment: "筷子兄弟可能没有最好的嗓音和最高级的制作，但他们懂一件事：音乐是用来连接人的。你的音乐只连接了你自己的幻想。"
+  },
+  {
+    name: '套马杆', artist: '乌兰托娅', songmid: '001s2jdK4XhiPB',
+    cover: 'https://y.qq.com/music/photo_new/T002R300x300M000004L0Qi04bBBtT_1.jpg',
+    ding_comment: "草原神曲。我知道你大概觉得自己永远不会做出这种歌，但问题是——你做的歌连这种歌的十分之一传播力都没有。别用品味当借口掩盖你的无能。",
+    liang_comment: "《套马杆》有一种朴素的快乐。它不思考、不焦虑、不装深沉。而你的音乐里那种刻意的忧郁和故作深沉，恰恰暴露了你内心的不自信。"
+  },
+  {
+    name: '老鼠爱大米', artist: '杨臣刚', songmid: '001FqAbW1HO5uT',
+    cover: 'https://y.qq.com/music/photo_new/T002R300x300M000003HCRqn3CePzQ_1.jpg',
+    ding_comment: "华语乐坛初代网络神曲。杨臣刚用一首歌证明了：旋律记忆点比你所有的高级和弦加起来都有用。你的音乐有记忆点吗？没有。那还做什么音乐？",
+    liang_comment: "2004年，这首歌用最原始的方式击穿了互联网的传播壁垒。它什么都不是，但它什么都是。有时候我听完某些'精心制作'的独立音乐后，反而会怀念这种笨拙的赤诚。"
+  },
+  {
+    name: '求佛', artist: '誓言', songmid: '001Qg2zy2hBmfl',
+    cover: 'https://y.qq.com/music/photo_new/T002R300x300M000002FDVTf3OzXOC_1.jpg',
+    ding_comment: "又一首被'高级'音乐人看不起的口水歌。但你知道吗？能写出一首让人KTV必点的歌，本身就是一种天赋。你有这种天赋吗？从你的作品来看——并没有。",
+    liang_comment: "《求佛》的旋律虽然简单，但它完成了音乐最基本的使命：传递情感并被人记住。这两件事，你一件都没做到。"
+  }
+];
+
+function checkAndShowShameSong(avgScore) {
+  if (avgScore >= 50) {
+    document.getElementById('shame-section').style.display = 'none';
+    return;
+  }
+
+  const song = SHAME_SONGS[Math.floor(Math.random() * SHAME_SONGS.length)];
+  const section = document.getElementById('shame-section');
+  const rec = document.getElementById('shame-rec');
+
+  const playerUrl = 'https://y.qq.com/n/ryqq/songDetail/' + song.songmid;
+
+  rec.innerHTML = `
+    <div class="shame-rec-card">
+      <div class="shame-rec-header">
+        <img class="shame-rec-cover" src="${song.cover}" alt="${song.name}" onerror="this.src='${DEFAULT_COVER}'">
+        <div class="shame-rec-info">
+          <div class="shame-rec-song">${song.name}</div>
+          <div class="shame-rec-artist">${song.artist}</div>
+        </div>
+        <a href="${playerUrl}" target="_blank" class="lb-listen" title="去QQ音乐收听">▶</a>
+      </div>
+      <div class="shame-rec-comment ding">
+        <div class="comment-critic">🔥 丁大升 说：</div>
+        ${song.ding_comment}
+      </div>
+      <div class="shame-rec-comment liang">
+        <div class="comment-critic">🗡️ 良缘 说：</div>
+        ${song.liang_comment}
+      </div>
+      <div class="shame-player">
+        <iframe src="https://i.y.qq.com/n2/m/share/details/song.html?songmid=${song.songmid}&ADTAG=embed" 
+                frameborder="0" allow="autoplay" scrolling="no"></iframe>
+      </div>
+    </div>
+  `;
+
+  section.style.display = 'block';
+}
+
+// ===== Leaderboard (排行榜) =====
+const LEADERBOARD_DATA = {
+  day: [
+    {rank:1, song:'星河入梦', artist:'林屿辰', dingScore:78, liangScore:85, songmid:'003OUlho2HcRHC', cover:'https://y.qq.com/music/photo_new/T002R300x300M000001SFBfe19Dxxp_1.jpg'},
+    {rank:2, song:'雾中花', artist:'苏念安', dingScore:72, liangScore:76, songmid:'0039MnYb0qxYhV', cover:'https://y.qq.com/music/photo_new/T002R300x300M000003Ow85E3IBAMK_1.jpg'},
+    {rank:3, song:'末班地铁', artist:'陈默白', dingScore:68, liangScore:71, songmid:'001BLpXF2DyJe2', cover:'https://y.qq.com/music/photo_new/T002R300x300M000000e1jdF1WPRUy_1.jpg'},
+    {rank:4, song:'退潮', artist:'沈舟', dingScore:55, liangScore:62, songmid:'002Neh8l0dcJDU', cover:'https://y.qq.com/music/photo_new/T002R300x300M000002KCMkR4237rY_1.jpg'},
+    {rank:5, song:'错位人生', artist:'何以歌', dingScore:45, liangScore:51, songmid:'004VfhFG1ExN5g', cover:'https://y.qq.com/music/photo_new/T002R300x300M000001VWwqZ3n4BpC_1.jpg'},
+  ],
+  week: [
+    {rank:1, song:'深海信号', artist:'莫亦寒', dingScore:82, liangScore:88, songmid:'001aGMk91dCcFO', cover:'https://y.qq.com/music/photo_new/T002R300x300M000004UfJWk2VcNKy_1.jpg'},
+    {rank:2, song:'锈', artist:'齐声', dingScore:76, liangScore:79, songmid:'0039MnYb0qxYhV', cover:'https://y.qq.com/music/photo_new/T002R300x300M000001h0cDR2OVBbN_1.jpg'},
+    {rank:3, song:'纸飞机', artist:'温以澄', dingScore:70, liangScore:74, songmid:'000YoEfh1kT29y', cover:'https://y.qq.com/music/photo_new/T002R300x300M000003Ow85E3IBAMK_1.jpg'},
+    {rank:4, song:'空城', artist:'夜行者', dingScore:62, liangScore:58, songmid:'003xKCfC3aqeFC', cover:'https://y.qq.com/music/photo_new/T002R300x300M000001SFBfe19Dxxp_1.jpg'},
+    {rank:5, song:'告别练习', artist:'柏安', dingScore:48, liangScore:53, songmid:'001tGkip1VDTUE', cover:'https://y.qq.com/music/photo_new/T002R300x300M000000e1jdF1WPRUy_1.jpg'},
+  ],
+  month: [
+    {rank:1, song:'钛合金心脏', artist:'赵鹿屿', dingScore:85, liangScore:91, songmid:'001aGMk91dCcFO', cover:'https://y.qq.com/music/photo_new/T002R300x300M000002jLMOr09IVhp_1.jpg'},
+    {rank:2, song:'银河修理工', artist:'程北', dingScore:80, liangScore:83, songmid:'003OUlho2HcRHC', cover:'https://y.qq.com/music/photo_new/T002R300x300M000004UfJWk2VcNKy_1.jpg'},
+    {rank:3, song:'落日快递', artist:'苏念安', dingScore:75, liangScore:78, songmid:'0039MnYb0qxYhV', cover:'https://y.qq.com/music/photo_new/T002R300x300M000001h0cDR2OVBbN_1.jpg'},
+    {rank:4, song:'云端邮局', artist:'林屿辰', dingScore:71, liangScore:69, songmid:'002Neh8l0dcJDU', cover:'https://y.qq.com/music/photo_new/T002R300x300M000003Ow85E3IBAMK_1.jpg'},
+    {rank:5, song:'黑胶唱片', artist:'夜行者', dingScore:58, liangScore:65, songmid:'003xKCfC3aqeFC', cover:'https://y.qq.com/music/photo_new/T002R300x300M000000e1jdF1WPRUy_1.jpg'},
+  ]
+};
+
+function switchLeaderboard(period, btn) {
+  document.querySelectorAll('.lb-tab').forEach(t => t.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderLeaderboard(period);
+}
+
+function renderLeaderboard(period) {
+  const data = LEADERBOARD_DATA[period] || LEADERBOARD_DATA.day;
+  const container = document.getElementById('leaderboard-list');
+  
+  container.innerHTML = data.map((item, i) => {
+    const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : 'normal';
+    const avg = Math.round((item.dingScore + item.liangScore) / 2);
+    const listenUrl = 'https://y.qq.com/n/ryqq/songDetail/' + item.songmid;
+    return `
+      <div class="lb-item">
+        <div class="lb-rank ${rankClass}">${i < 3 ? ['👑','🥈','🥉'][i] : item.rank}</div>
+        <img class="lb-cover" src="${item.cover}" alt="${item.song}" onerror="this.src='${DEFAULT_COVER}'">
+        <div class="lb-info">
+          <div class="lb-song">${item.song}</div>
+          <div class="lb-artist">${item.artist} · 均分 ${avg}</div>
+        </div>
+        <div class="lb-scores">
+          <span class="lb-score-d">🔥${item.dingScore}</span>
+          <span class="lb-score-l">🗡️${item.liangScore}</span>
+        </div>
+        <a href="${listenUrl}" target="_blank" class="lb-listen" title="试听">▶</a>
+      </div>
+    `;
+  }).join('');
+}
+
+// Init leaderboard on page load
+renderLeaderboard('day');
 
 // ===== Drag & Drop for MP3 =====
 const mp3Zone = document.getElementById('mp3-zone');
