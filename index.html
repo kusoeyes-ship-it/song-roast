@@ -39,7 +39,7 @@ input,textarea{font-family:inherit;outline:none}
   position:absolute;font-size:24px;
   animation:stickerFloat 3s ease-in-out infinite;
   filter:drop-shadow(0 2px 8px rgba(0,0,0,0.5));
-  pointer-events:none;
+  pointer-events:none;z-index:1;
 }
 @keyframes stickerFloat{
   0%,100%{transform:translateY(0) rotate(var(--r,0deg))}
@@ -152,12 +152,12 @@ input,textarea{font-family:inherit;outline:none}
 .disclaimer{
   margin-top:40px;padding:16px;
   font-size:11px;color:var(--text-dim);
-  line-height:1.8;
+  line-height:1.8;position:relative;z-index:2;
   border-top:1px dashed rgba(255,255,255,0.1);
 }
 
 /* ===== Leaderboard ===== */
-.leaderboard-section{text-align:left;position:relative}
+.leaderboard-section{text-align:left;position:relative;z-index:2}
 .leaderboard-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .leaderboard-title{font-size:18px;font-weight:800;background:linear-gradient(135deg,var(--yellow),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .leaderboard-tabs{display:flex;gap:6px}
@@ -179,7 +179,8 @@ input,textarea{font-family:inherit;outline:none}
 .lb-rank{
   width:28px;height:28px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
-  font-size:13px;font-weight:800;flex-shrink:0;
+  font-size:14px;font-weight:900;flex-shrink:0;
+  line-height:1;
 }
 .lb-rank.gold{background:linear-gradient(135deg,#ffd700,#ffaa00);color:#000}
 .lb-rank.silver{background:linear-gradient(135deg,#c0c0c0,#a0a0a0);color:#000}
@@ -1956,8 +1957,6 @@ function generateReview() {
   currentReview.liangReview = liangReview;
   currentReview.liangScores = liangScores;
   currentReview.liangTotal = liangTotal;
-  
-  saveToHistory(currentReview);
 }
 
 function renderResult() {
@@ -2557,7 +2556,7 @@ function renderLeaderboard(period) {
     const listenUrl = 'https://y.qq.com/n/ryqq/songDetail/' + item.songmid;
     return `
       <div class="lb-item">
-        <div class="lb-rank ${rankClass}">${i < 3 ? ['👑','🥈','🥉'][i] : item.rank}</div>
+        <div class="lb-rank ${rankClass}">${item.rank}</div>
         <img class="lb-cover" src="${item.cover}" alt="${item.song}" onerror="this.src='${DEFAULT_COVER}'">
         <div class="lb-info">
           <div class="lb-song">${item.song}</div>
@@ -2578,6 +2577,15 @@ renderLeaderboard('day');
 
 // ===== Drag & Drop for MP3 =====
 const mp3Zone = document.getElementById('mp3-zone');
+
+// 链接输入框内容变化时，重置解析按钮
+document.getElementById('qq-link').addEventListener('input', function() {
+  const btn = document.getElementById('btn-parse-link');
+  btn.textContent = '🔍 解析链接';
+  btn.onclick = parseLinkAndPreview;
+  document.getElementById('link-preview').style.display = 'none';
+});
+
 mp3Zone.addEventListener('dragover', (e) => { e.preventDefault(); mp3Zone.style.borderColor = 'var(--cyan)'; });
 mp3Zone.addEventListener('dragleave', () => { mp3Zone.style.borderColor = ''; });
 mp3Zone.addEventListener('drop', (e) => {
