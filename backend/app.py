@@ -978,6 +978,56 @@ async def analyze_upload(
     }
 
 
+@app.post("/api/resolve-short-link")
+async def resolve_short_link(request: Request):
+    """只做短链接重定向解析，返回 songmid/songid，不调 QQ 音乐详情 API"""
+    body = await request.json()
+    url = body.get("url", "").strip()
+    if not url:
+        raise HTTPException(400, "请提供链接")
+
+    loop = asyncio.get_event_loop()
+    try:
+        req = urllib.request.Request(url)
+        req.add_header('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X)')
+        resp = await loop.run_in_executor(None, lambda: urllib.request.urlopen(req, timeout=8))
+        redirected = resp.geturl()
+        logger.info(f"Short link resolved: {url} -> {redirected}")
+    except Exception as e:
+        logger.warning(f"Short link resolve failed: {e}")
+        raise HTTPException(500, f"短链接解析失败: {str(e)}")
+
+    # 从重定向后的 URL 提取 songmid / songid
+    songmid = None
+    songid = None
+    for pattern in [r'songDetail/([a-zA-Z0-9]+)', r'songmid=([a-zA-Z0-9]+)',
+                    r'song/([a-zA-Z0-9]{10,})', r'songid=(\d+)', r'id=(\d+)']:
+        m = re.search(pattern, redirected)
+        if m:
+            val = m.group(1)
+            if val.isdigit():
+                songid = val
+            else:
+                songmid = val
+            break
+
+    # songid -> songmid 转换
+    if songid and not songmid:
+        try:
+            payload = json.dumps({"comm":{"ct":24,"cv":0},"songinfo":{"method":"get_song_detail_yqq","module":"music.pf_song_detail_svr","param":{"song_type":0,"song_id":int(songid)}}}).encode()
+            req2 = urllib.request.Request("https://u.y.qq.com/cgi-bin/musicu.fcg", data=payload, method='POST')
+            req2.add_header('Content-Type', 'application/json')
+            resp2 = await loop.run_in_executor(None, lambda: urllib.request.urlopen(req2, timeout=8))
+            data = json.loads(resp2.read().decode())
+            mid = data.get("songinfo",{}).get("data",{}).get("track_info",{}).get("mid","")
+            if mid:
+                songmid = mid
+        except Exception as e:
+            logger.warning(f"songid->songmid conversion failed: {e}")
+
+    return {"songmid": songmid, "songid": songid, "redirected_url": redirected}
+
+
 @app.post("/api/parse-link")
 async def parse_qq_link(request: Request):
     """解析 QQ 音乐链接，返回真实歌曲信息 + 歌词"""

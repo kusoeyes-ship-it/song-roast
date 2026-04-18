@@ -1514,54 +1514,102 @@ async function parseLinkAndPreview() {
   btn.onclick = () => startAnalyze('link');
 }
 
-// 前端直接解析（从 URL 提取 songmid，直接调 QQ 音乐公开接口）
-async function parseLinkFrontend(url) {
-  // 提取 songmid
-  const patterns = [
-    /songDetail\/([a-zA-Z0-9]+)/,
-    /songmid=([a-zA-Z0-9]+)/,
-    /song\/([a-zA-Z0-9]{10,})/,
-  ];
-  let songmid = null;
-  for (const p of patterns) {
-    const m = url.match(p);
-    if (m) { songmid = m[1]; break; }
-  }
-  if (!songmid) return null;
+// 前端直接解析（JSONP 方式调 QQ 音乐 API，绕过 CORS）
+function jsonpFetch(url, timeout = 8000) {
+  return new Promise((resolve, reject) => {
+    const cbName = '_qqmusic_cb_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+    const script = document.createElement('script');
+    const timer = setTimeout(() => { cleanup(); reject(new Error('JSONP timeout')); }, timeout);
+    function cleanup() { clearTimeout(timer); delete window[cbName]; script.remove(); }
+    window[cbName] = (data) => { cleanup(); resolve(data); };
+    script.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + cbName + '&jsonpCallback=' + cbName;
+    script.onerror = () => { cleanup(); reject(new Error('JSONP load error')); };
+    document.head.appendChild(script);
+  });
+}
 
-  // 尝试直接请求 musicu.fcg（可能被 CORS 拦截）
-  try {
-    const payload = {
-      comm: {ct:24, cv:0},
-      songinfo: {
-        method: 'get_song_detail_yqq',
-        module: 'music.pf_song_detail_svr',
-        param: {song_type:0, song_mid:songmid}
+async function parseLinkFrontend(url) {
+  // 提取 songmid / songid
+  const patterns = [
+    [/songDetail\/([a-zA-Z0-9]+)/, 'mid'],
+    [/songmid=([a-zA-Z0-9]+)/, 'mid'],
+    [/song\/([a-zA-Z0-9]{10,})/, 'mid'],
+    [/songid=(\d+)/, 'id'],
+    [/id=(\d+)/, 'id'],
+  ];
+  let songmid = null, songid = null;
+  for (const [p, type] of patterns) {
+    const m = url.match(p);
+    if (m) {
+      if (type === 'mid') songmid = m[1]; else songid = m[1];
+      break;
+    }
+  }
+
+  // 处理短链接：尝试在后端做重定向（因为前端不能跨域重定向）
+  if (!songmid && !songid && url.includes('y.qq.com')) {
+    try {
+      const resp = await fetch(API_BASE + '/api/resolve-short-link', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({url}),
+        signal: AbortSignal.timeout(8000),
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.songmid) songmid = data.songmid;
+        if (data.songid) songid = data.songid;
       }
-    };
+    } catch(e) { console.warn('短链解析失败:', e); }
+  }
+
+  if (!songmid && !songid) return null;
+
+  // 方法1: JSONP 调 fcg_play_single_song（最可靠）
+  if (songmid) {
+    try {
+      const data = await jsonpFetch(
+        `https://c.y.qq.com/v8/fcg-bin/fcg_play_single_song.fcg?songmid=${songmid}&format=json`
+      );
+      const songs = data?.data || [];
+      if (songs.length > 0) {
+        const s = songs[0];
+        const artists = (s.singer || []).map(si => si.name).join('/');
+        const albumMid = s.album?.mid || '';
+        const cover = albumMid ? `https://y.qq.com/music/photo_new/T002R300x300M000${albumMid}.jpg` : '';
+        // 获取歌词
+        let lyrics = '';
+        try {
+          const lrcData = await jsonpFetch(
+            `https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric_new.fcg?songmid=${s.mid || songmid}&format=json&nobase64=0`,
+            6000
+          );
+          if (lrcData?.lyric) {
+            lyrics = atob(lrcData.lyric).replace(/\[\d+:\d+\.\d+\]/g, '').replace(/\n{3,}/g, '\n\n').trim();
+          }
+        } catch(e) { console.warn('JSONP 歌词获取失败:', e); }
+        return { song_name: s.name || '未知歌曲', artist_name: artists || '未知歌手', album_name: s.album?.name || '', cover_url: cover, songmid: s.mid || songmid, lyrics };
+      }
+    } catch(e) { console.warn('JSONP fcg_play_single_song 失败:', e); }
+  }
+
+  // 方法2: 直接 fetch musicu.fcg（可能被 CORS 拦截，兜底）
+  try {
+    const param = songmid ? {song_type:0, song_mid:songmid} : {song_type:0, song_id:parseInt(songid)};
+    const payload = { comm:{ct:24,cv:0}, songinfo:{method:'get_song_detail_yqq',module:'music.pf_song_detail_svr',param} };
     const resp = await fetch('https://u.y.qq.com/cgi-bin/musicu.fcg', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(8000),
+      method: 'POST', body: JSON.stringify(payload), signal: AbortSignal.timeout(8000),
     });
     const data = await resp.json();
     const track = data?.songinfo?.data?.track_info;
-    if (track) {
+    if (track && track.name) {
       const artists = (track.singer || []).map(s => s.name).join('/');
       const albumMid = track.album?.mid || '';
       const cover = albumMid ? `https://y.qq.com/music/photo_new/T002R300x300M000${albumMid}.jpg` : '';
-      return {
-        song_name: track.name || '未知歌曲',
-        artist_name: artists || '未知歌手',
-        album_name: track.album?.name || '',
-        cover_url: cover,
-        songmid: track.mid || songmid,
-        lyrics: '', // CORS 限制，前端拿不到歌词
-      };
+      return { song_name: track.name, artist_name: artists || '未知歌手', album_name: track.album?.name || '', cover_url: cover, songmid: track.mid || songmid || '', lyrics: '' };
     }
-  } catch(e) {
-    console.warn('前端直接解析也失败:', e);
-  }
+  } catch(e) { console.warn('前端 fetch musicu.fcg 失败:', e); }
+
   return null;
 }
 
