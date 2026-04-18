@@ -979,8 +979,17 @@ async def analyze_upload(
 
 
 @app.post("/api/parse-link")
-async def parse_qq_link(qq_music_url: str = Form("")):
+async def parse_qq_link(request: Request):
     """解析 QQ 音乐链接，返回真实歌曲信息 + 歌词"""
+
+    # 支持 JSON 和 Form 两种格式
+    content_type = request.headers.get("content-type", "")
+    if "application/json" in content_type:
+        body = await request.json()
+        qq_music_url = body.get("url", "") or body.get("qq_music_url", "")
+    else:
+        form = await request.form()
+        qq_music_url = form.get("url", "") or form.get("qq_music_url", "")
 
     if not qq_music_url:
         raise HTTPException(400, "请提供 QQ 音乐链接")
@@ -1063,80 +1072,91 @@ async def parse_qq_link(qq_music_url: str = Form("")):
 
 
 async def _fetch_song_detail(songmid=None, songid=None):
-    """通过 musicu.fcg 获取歌曲详情"""
-    # 构建请求参数
-    if songmid:
-        song_param = {"songmid": [songmid]}
-    elif songid:
-        song_param = {"songid": [int(songid)]}
-    else:
-        raise ValueError("需要 songmid 或 songid")
-
-    payload = {
-        "songinfo": {
-            "method": "get_song_detail_yqq",
-            "module": "music.pf_song_detail_svr",
-            "param": {
-                "song_type": 0,
-                "song_mid": songmid or "",
-                "song_id": int(songid) if songid else 0,
-            }
-        }
-    }
-
-    # 如果只有 songmid, 用另一种更简单的接口
-    if songmid:
-        payload = {
-            "comm": {"ct": 24, "cv": 0},
-            "songinfo": {
-                "method": "get_song_detail_yqq",
-                "module": "music.pf_song_detail_svr",
-                "param": {"song_type": 0, "song_mid": songmid}
-            }
-        }
-    else:
-        payload = {
-            "comm": {"ct": 24, "cv": 0},
-            "songinfo": {
-                "method": "get_song_detail_yqq",
-                "module": "music.pf_song_detail_svr",
-                "param": {"song_type": 0, "song_id": int(songid)}
-            }
-        }
-
-    url = "https://u.y.qq.com/cgi-bin/musicu.fcg"
-    data = json.dumps(payload).encode('utf-8')
-
-    req = urllib.request.Request(url, data=data, method='POST')
-    req.add_header('Content-Type', 'application/json')
-    req.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
-    req.add_header('Referer', 'https://y.qq.com/')
-    req.add_header('Origin', 'https://y.qq.com')
-
+    """通过 QQ 音乐接口获取歌曲详情"""
     loop = asyncio.get_event_loop()
-    resp = await loop.run_in_executor(None, lambda: urllib.request.urlopen(req, timeout=10))
-    body = json.loads(resp.read().decode('utf-8'))
 
-    track = body.get("songinfo", {}).get("data", {}).get("track_info", {})
-    if not track:
-        raise ValueError("未找到歌曲信息")
+    # === 方法1: fcg_play_single_song (最可靠, 只支持 songmid) ===
+    if songmid:
+        try:
+            api_url = f"https://c.y.qq.com/v8/fcg-bin/fcg_play_single_song.fcg?songmid={songmid}&format=json"
+            req = urllib.request.Request(api_url, headers={
+                'Referer': 'https://y.qq.com',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            })
+            resp = await loop.run_in_executor(None, lambda: urllib.request.urlopen(req, timeout=10))
+            body = json.loads(resp.read().decode('utf-8'))
+            songs = body.get("data", [])
+            if songs:
+                s = songs[0]
+                singers = s.get("singer", [])
+                artist_name = "/".join([si.get("name", "") for si in singers]) if singers else "未知歌手"
+                album_mid = s.get("album", {}).get("mid", "")
+                cover_url = f"https://y.qq.com/music/photo_new/T002R300x300M000{album_mid}.jpg" if album_mid else ""
+                return {
+                    "song_name": s.get("name", "未知歌曲"),
+                    "artist_name": artist_name,
+                    "album_name": s.get("album", {}).get("name", ""),
+                    "cover_url": cover_url,
+                    "songmid": s.get("mid", songmid),
+                    "songid": str(s.get("id", "")),
+                }
+            logger.warning(f"fcg_play_single_song returned empty for songmid={songmid}")
+        except Exception as e:
+            logger.warning(f"fcg_play_single_song failed: {e}")
 
-    # 提取歌手名（可能有多个歌手）
-    singers = track.get("singer", [])
-    artist_name = "/".join([s.get("name", "") for s in singers]) if singers else "未知歌手"
+    # === 方法2: musicu.fcg (备用, 支持 songmid 和 songid) ===
+    try:
+        if songmid:
+            payload = {
+                "comm": {"ct": 24, "cv": 0},
+                "songinfo": {
+                    "method": "get_song_detail_yqq",
+                    "module": "music.pf_song_detail_svr",
+                    "param": {"song_type": 0, "song_mid": songmid}
+                }
+            }
+        elif songid:
+            payload = {
+                "comm": {"ct": 24, "cv": 0},
+                "songinfo": {
+                    "method": "get_song_detail_yqq",
+                    "module": "music.pf_song_detail_svr",
+                    "param": {"song_type": 0, "song_id": int(songid)}
+                }
+            }
+        else:
+            raise ValueError("需要 songmid 或 songid")
 
-    # 封面图: album mid -> 图片URL
-    album_mid = track.get("album", {}).get("mid", "")
-    cover_url = f"https://y.qq.com/music/photo_new/T002R300x300M000{album_mid}.jpg" if album_mid else ""
+        url = "https://u.y.qq.com/cgi-bin/musicu.fcg"
+        data = json.dumps(payload).encode('utf-8')
+        req = urllib.request.Request(url, data=data, method='POST')
+        req.add_header('Content-Type', 'application/json')
+        req.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
+        req.add_header('Referer', 'https://y.qq.com/')
+        req.add_header('Origin', 'https://y.qq.com')
 
-    return {
-        "song_name": track.get("name", "未知歌曲"),
-        "artist_name": artist_name,
-        "album_name": track.get("album", {}).get("name", ""),
-        "cover_url": cover_url,
-        "songmid": track.get("mid", songmid or ""),
-        "songid": track.get("id", songid or ""),
-    }
+        resp = await loop.run_in_executor(None, lambda: urllib.request.urlopen(req, timeout=10))
+        body = json.loads(resp.read().decode('utf-8'))
+
+        track = body.get("songinfo", {}).get("data", {}).get("track_info", {})
+        if track and track.get("name"):
+            singers = track.get("singer", [])
+            artist_name = "/".join([s.get("name", "") for s in singers]) if singers else "未知歌手"
+            album_mid = track.get("album", {}).get("mid", "")
+            cover_url = f"https://y.qq.com/music/photo_new/T002R300x300M000{album_mid}.jpg" if album_mid else ""
+            return {
+                "song_name": track.get("name", "未知歌曲"),
+                "artist_name": artist_name,
+                "album_name": track.get("album", {}).get("name", ""),
+                "cover_url": cover_url,
+                "songmid": track.get("mid", songmid or ""),
+                "songid": str(track.get("id", songid or "")),
+            }
+    except Exception as e:
+        logger.warning(f"musicu.fcg fallback failed: {e}")
+
+    # === 都失败了 ===
+    raise ValueError(f"无法获取歌曲信息 (songmid={songmid}, songid={songid})")
 
 
 async def _download_and_analyze_audio(songmid: str) -> dict:
@@ -1261,15 +1281,27 @@ async def _fetch_lyrics(songmid):
 
 
 @app.post("/api/analyze/link")
-async def analyze_link(
-    qq_music_url: str = Form(""),
-    song_name: str = Form(""),
-    artist_name: str = Form(""),
-    lyrics: str = Form(""),
-    cover_url: str = Form(""),
-    device_id: str = Form("anonymous"),
-):
+async def analyze_link(request: Request):
     """处理 QQ 音乐链接 → 下载音频分析 → 生成辣评"""
+
+    # 支持 JSON 和 Form 两种格式
+    content_type = request.headers.get("content-type", "")
+    if "application/json" in content_type:
+        body = await request.json()
+        qq_music_url = body.get("url", "") or body.get("qq_music_url", "")
+        song_name = body.get("song_name", "")
+        artist_name = body.get("artist_name", "")
+        lyrics = body.get("lyrics", "")
+        cover_url = body.get("cover_url", "")
+        device_id = body.get("device_id", "anonymous")
+    else:
+        form = await request.form()
+        qq_music_url = form.get("url", "") or form.get("qq_music_url", "")
+        song_name = form.get("song_name", "")
+        artist_name = form.get("artist_name", "")
+        lyrics = form.get("lyrics", "")
+        cover_url = form.get("cover_url", "")
+        device_id = form.get("device_id", "anonymous")
 
     if not song_name:
         raise HTTPException(400, "请提供歌曲名称")
