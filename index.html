@@ -2027,7 +2027,7 @@ async function runSmartAnalysis(mode, songName, artistName, coverSrc, lyrics) {
   updateProgress(0, '正在接收作品');
 
   // ======= 第 1 步（0-10%）：接收作品确认 =======
-  await wait(600);
+  await wait(300);
   addAnalysisCard('info', `
     <div class="card-header">
       <span class="card-icon">📋</span> 作品已接收
@@ -2040,12 +2040,12 @@ async function runSmartAnalysis(mode, songName, artistName, coverSrc, lyrics) {
     </div>
   `);
   updateProgress(8, '作品已接收');
-  await wait(1200);
+  await wait(300);
 
   // ======= 第 2 步（10-25%）：歌词初审 =======
   updateProgress(12, '正在审阅歌词');
   const lyricsData = generateLyricsInsights(lyrics, songName);
-  await wait(800);
+  await wait(400);
 
   addAnalysisCard('lyrics', `
     <div class="card-header">
@@ -2059,7 +2059,7 @@ async function runSmartAnalysis(mode, songName, artistName, coverSrc, lyrics) {
     </div>
   `);
   updateProgress(20, '歌词初审中');
-  await wait(1500);
+  await wait(400);
 
   // 丁大升对歌词的第一反应
   const dingLyricsReaction = lyricsData.themes.includes('爱情') ?
@@ -2079,13 +2079,13 @@ async function runSmartAnalysis(mode, songName, artistName, coverSrc, lyrics) {
       </div>
     </div>
   `);
-  await typeInElement(document.getElementById('ding-lyrics-reaction'), dingLyricsReaction, 25);
+  await typeInElement(document.getElementById('ding-lyrics-reaction'), dingLyricsReaction, 15);
   updateProgress(25, '歌词分析完成');
-  await wait(1000);
+  await wait(250);
 
   // ======= 第 3 步（25-40%）：韵律分析 =======
   updateProgress(28, '正在分析韵律结构');
-  await wait(800);
+  await wait(400);
 
   addAnalysisCard('lyrics', `
     <div class="card-header">
@@ -2098,7 +2098,7 @@ async function runSmartAnalysis(mode, songName, artistName, coverSrc, lyrics) {
     </div>
   `);
   updateProgress(38, '韵律分析完成');
-  await wait(1200);
+  await wait(300);
 
   // 良缘对歌词的反应
   const liangLyricsReaction = lyricsData.themes.includes('爱情') ?
@@ -2116,9 +2116,9 @@ async function runSmartAnalysis(mode, songName, artistName, coverSrc, lyrics) {
       </div>
     </div>
   `);
-  await typeInElement(document.getElementById('liang-lyrics-reaction'), liangLyricsReaction, 25);
+  await typeInElement(document.getElementById('liang-lyrics-reaction'), liangLyricsReaction, 15);
   updateProgress(42, '正在分析音频特征');
-  await wait(800);
+  await wait(400);
 
   // ======= 第 4 步（40-60%）：音频特征分析 =======
   let audioData;
@@ -2130,7 +2130,7 @@ async function runSmartAnalysis(mode, songName, artistName, coverSrc, lyrics) {
   if (mode === 'upload') {
     audioData = generateFakeAudioFeatures(songName);
     updateProgress(45, '正在提取音频特征');
-    await wait(600);
+    await wait(300);
 
     const audioCard = addAnalysisCard('audio', `
       <div class="card-header">
@@ -2170,7 +2170,7 @@ async function runSmartAnalysis(mode, songName, artistName, coverSrc, lyrics) {
     updateProgress(55, '音频特征提取完成');
   } else {
     updateProgress(48, '正在获取歌曲信息');
-    await wait(600);
+    await wait(300);
     addAnalysisCard('audio', `
       <div class="card-header">
         <span class="card-icon">🔗</span> QQ 音乐歌曲信息
@@ -2183,11 +2183,11 @@ async function runSmartAnalysis(mode, songName, artistName, coverSrc, lyrics) {
     `);
     updateProgress(55, '歌曲信息获取完成');
   }
-  await wait(1200);
+  await wait(300);
 
   // ======= 第 5 步（60-75%）：丁大升深度审听 =======
   updateProgress(60, '丁大升正在组织毒舌语言');
-  await wait(500);
+  await wait(250);
 
   const dingListening = mode === 'upload' ?
     (audioData.energy > 0.7 ?
@@ -2206,13 +2206,13 @@ async function runSmartAnalysis(mode, songName, artistName, coverSrc, lyrics) {
       </div>
     </div>
   `);
-  await typeInElement(document.getElementById('ding-deep-reaction'), dingListening, 22);
+  await typeInElement(document.getElementById('ding-deep-reaction'), dingListening, 13);
   updateProgress(72, '丁大升审听完毕');
-  await wait(800);
+  await wait(400);
 
   // ======= 第 6 步（75-88%）：良缘深度审听 =======
   updateProgress(76, '良缘正在磨刀');
-  await wait(500);
+  await wait(250);
 
   const liangListening = mode === 'upload' ?
     (audioData.vocal > 0.7 ?
@@ -2229,9 +2229,9 @@ async function runSmartAnalysis(mode, songName, artistName, coverSrc, lyrics) {
       </div>
     </div>
   `);
-  await typeInElement(document.getElementById('liang-deep-reaction'), liangListening, 22);
+  await typeInElement(document.getElementById('liang-deep-reaction'), liangListening, 13);
   updateProgress(88, '乐评人审听完毕');
-  await wait(600);
+  await wait(300);
 
   // ======= 第 7 步（88-100%）：等待后端结果 / 生成最终辣评 =======
   updateProgress(90, '正在生成最终辣评');
@@ -2269,7 +2269,7 @@ async function runSmartAnalysis(mode, songName, artistName, coverSrc, lyrics) {
     generateReview();
   }
 
-  await wait(800);
+  await wait(400);
   updateProgress(100, '辣评生成完毕！');
 
   // 替换最后一张卡片为"判决出炉"

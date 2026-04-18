@@ -848,8 +848,11 @@ async def call_hunyuan(system_prompt: str, user_prompt: str) -> dict:
         )
 
         logger.info(f"Calling Hunyuan API (model={model})...")
-        with urllib.request.urlopen(req, timeout=60) as resp:
-            result = json.loads(resp.read().decode("utf-8"))
+        loop = asyncio.get_event_loop()
+        def _sync_call():
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        result = await loop.run_in_executor(None, _sync_call)
 
         # Check for API errors
         if "Response" in result and "Error" in result["Response"]:
@@ -967,12 +970,14 @@ async def analyze_upload(
     # Analyze audio
     audio_features = analyze_audio(str(audio_path))
 
-    # Generate reviews
+    # Generate reviews (并行调用，速度翻倍)
     ding_prompt = build_review_prompt(song_name, artist_name, lyrics, audio_features, "ding", cover_url)
     liang_prompt = build_review_prompt(song_name, artist_name, lyrics, audio_features, "liang", cover_url)
 
-    ding_result = await call_llm(DING_SYSTEM_PROMPT, ding_prompt)
-    liang_result = await call_llm(LIANG_SYSTEM_PROMPT, liang_prompt)
+    ding_result, liang_result = await asyncio.gather(
+        call_llm(DING_SYSTEM_PROMPT, ding_prompt),
+        call_llm(LIANG_SYSTEM_PROMPT, liang_prompt)
+    )
 
     # Save to DB
     conn = sqlite3.connect(str(DB_PATH))
@@ -1448,12 +1453,14 @@ async def analyze_link(request: Request):
         if lyrics:
             audio_features = _analyze_lyrics_deeply(lyrics, song_name, artist_name)
 
-    # Generate reviews
+    # Generate reviews (并行调用，速度翻倍)
     ding_prompt = build_review_prompt(song_name, artist_name, lyrics, audio_features, "ding", cover_url)
     liang_prompt = build_review_prompt(song_name, artist_name, lyrics, audio_features, "liang", cover_url)
 
-    ding_result = await call_llm(DING_SYSTEM_PROMPT, ding_prompt)
-    liang_result = await call_llm(LIANG_SYSTEM_PROMPT, liang_prompt)
+    ding_result, liang_result = await asyncio.gather(
+        call_llm(DING_SYSTEM_PROMPT, ding_prompt),
+        call_llm(LIANG_SYSTEM_PROMPT, liang_prompt)
+    )
 
     # Save to DB
     conn = sqlite3.connect(str(DB_PATH))
