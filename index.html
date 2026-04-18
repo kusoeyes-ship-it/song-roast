@@ -1449,6 +1449,21 @@ async function checkBackend() {
 }
 checkBackend();
 
+// ===== PV/UV Tracking =====
+(function trackPageView() {
+  const deviceId = getDeviceId();
+  // 延迟等 backendAvailable 检测完
+  setTimeout(() => {
+    if (backendAvailable) {
+      fetch(API_BASE + '/api/track/pageview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ device_id: deviceId, page: location.pathname, referrer: document.referrer || '' })
+      }).catch(() => {});
+    }
+  }, 2000);
+})();
+
 // ===== State Management =====
 let currentReview = null;
 const DEFAULT_COVER = 'data:image/svg+xml,' + encodeURIComponent(`
@@ -2519,7 +2534,7 @@ function generatePoster() {
   
   // Draw QR code
   const qrCanvas = document.getElementById('poster-qr-canvas');
-  QRCode.generate('https://y.qq.com/viber_pub/lapingdts/index.html?ADTAG=QRcode', qrCanvas, 52);
+  QRCode.generate('https://kusoeyes-ship-it.github.io/song-roast/', qrCanvas, 52);
   
   // Draw radar
   setTimeout(() => {

@@ -65,6 +65,17 @@ def init_db():
             created_at TEXT
         )
     """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS pageviews (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            device_id TEXT,
+            page TEXT,
+            referrer TEXT,
+            ip TEXT,
+            user_agent TEXT,
+            created_at TEXT
+        )
+    """)
     conn.commit()
     conn.close()
 
@@ -1568,6 +1579,105 @@ async def leaderboard(period: str = "day", limit: int = 10):
         result.append(item)
 
     return result
+
+
+# ====== PV/UV Tracking ======
+
+@app.post("/api/track/pageview")
+async def track_pageview(request: Request):
+    """记录页面访问"""
+    body = await request.json()
+    device_id = body.get("device_id", "unknown")
+    page = body.get("page", "/")
+    referrer = body.get("referrer", "")
+    ip = request.client.host if request.client else "unknown"
+    ua = request.headers.get("user-agent", "")
+    now = datetime.now().isoformat()
+
+    conn = sqlite3.connect(str(DB_PATH))
+    conn.execute(
+        "INSERT INTO pageviews (device_id, page, referrer, ip, user_agent, created_at) VALUES (?,?,?,?,?,?)",
+        (device_id, page, referrer, ip, ua, now)
+    )
+    conn.commit()
+    conn.close()
+    return {"ok": True}
+
+
+@app.get("/api/admin/stats")
+async def admin_stats(key: str = "", period: str = "today"):
+    """
+    查询 PV/UV 统计（需要管理密钥）
+    GET /api/admin/stats?key=nantingdabipin2026&period=today|week|month|all
+    """
+    ADMIN_KEY = os.environ.get("ADMIN_KEY", "nantingdabipin2026")
+    if key != ADMIN_KEY:
+        raise HTTPException(403, "密钥错误")
+
+    now = datetime.now()
+    if period == "today":
+        cutoff = now.strftime("%Y-%m-%d")
+    elif period == "week":
+        from datetime import timedelta
+        cutoff = (now - timedelta(days=now.weekday())).strftime("%Y-%m-%d")
+    elif period == "month":
+        cutoff = now.strftime("%Y-%m-01")
+    else:
+        cutoff = "2000-01-01"
+
+    conn = sqlite3.connect(str(DB_PATH))
+    conn.row_factory = sqlite3.Row
+
+    # PV: total pageviews
+    pv = conn.execute(
+        "SELECT COUNT(*) as cnt FROM pageviews WHERE created_at >= ?", (cutoff,)
+    ).fetchone()["cnt"]
+
+    # UV: unique device_ids
+    uv = conn.execute(
+        "SELECT COUNT(DISTINCT device_id) as cnt FROM pageviews WHERE created_at >= ?", (cutoff,)
+    ).fetchone()["cnt"]
+
+    # 每日明细（最近7天）
+    daily = conn.execute("""
+        SELECT DATE(created_at) as day,
+               COUNT(*) as pv,
+               COUNT(DISTINCT device_id) as uv
+        FROM pageviews
+        WHERE created_at >= ?
+        GROUP BY DATE(created_at)
+        ORDER BY day DESC
+        LIMIT 30
+    """, (cutoff,)).fetchall()
+
+    # 评测数量
+    reviews_count = conn.execute(
+        "SELECT COUNT(*) as cnt FROM reviews WHERE created_at >= ?", (cutoff,)
+    ).fetchone()["cnt"]
+
+    # 热门来源
+    top_referrers = conn.execute("""
+        SELECT referrer, COUNT(*) as cnt
+        FROM pageviews
+        WHERE created_at >= ? AND referrer != ''
+        GROUP BY referrer
+        ORDER BY cnt DESC
+        LIMIT 10
+    """, (cutoff,)).fetchall()
+
+    conn.close()
+
+    return {
+        "period": period,
+        "since": cutoff,
+        "pv": pv,
+        "uv": uv,
+        "reviews": reviews_count,
+        "daily": [{"date": d["day"], "pv": d["pv"], "uv": d["uv"]} for d in daily],
+        "top_referrers": [{"referrer": r["referrer"], "count": r["cnt"]} for r in top_referrers]
+    }
+
+
 async def health():
     return {
         "status": "ok",
