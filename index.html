@@ -1,0 +1,1704 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>我的新歌怎么样 - 辣评系统</title>
+<style>
+/* ===== Reset & Base ===== */
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;min-height:100vh;overflow-x:hidden;font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;background:#0a0a0f;color:#fff}
+button{border:none;cursor:pointer;font-family:inherit}
+input,textarea{font-family:inherit;outline:none}
+
+/* ===== CSS Variables ===== */
+:root{
+  --red:#ff2d55;--orange:#ff6b35;--cyan:#00e5ff;--yellow:#ffe135;
+  --pink:#ff69b4;--purple:#a855f7;--green:#22c55e;
+  --bg-dark:#0a0a0f;--bg-card:rgba(255,255,255,0.06);
+  --text-dim:rgba(255,255,255,0.5);
+  --torn-edge:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 8'%3E%3Cpath d='M0 8 Q5 0 10 6 Q15 2 20 7 Q25 1 30 5 Q35 0 40 6 Q45 3 50 7 Q55 1 60 5 Q65 0 70 6 Q75 2 80 7 Q85 1 90 5 Q95 0 100 8' fill='%230a0a0f'/%3E%3C/svg%3E");
+}
+
+/* ===== Page System ===== */
+.page{display:none;min-height:100vh;padding:0 20px 40px}
+.page.active{display:block}
+
+/* ===== Shared Components ===== */
+.torn-divider{
+  height:12px;width:calc(100% + 40px);margin-left:-20px;
+  background:var(--torn-edge) repeat-x bottom;background-size:100px 12px;
+  position:relative;opacity:0.6;
+}
+.torn-divider::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:4px;
+  background:repeating-linear-gradient(90deg,transparent,transparent 3px,rgba(255,255,255,0.1) 3px,rgba(255,255,255,0.1) 6px);
+}
+
+.sticker{
+  position:absolute;font-size:24px;
+  animation:stickerFloat 3s ease-in-out infinite;
+  filter:drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+  pointer-events:none;
+}
+@keyframes stickerFloat{
+  0%,100%{transform:translateY(0) rotate(var(--r,0deg))}
+  50%{transform:translateY(-8px) rotate(calc(var(--r,0deg) + 5deg))}
+}
+
+.btn-primary{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:14px 28px;border-radius:6px;font-size:16px;font-weight:700;
+  transition:all 0.3s;position:relative;overflow:hidden;
+}
+.btn-primary::before{
+  content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent);
+  transition:left 0.5s;
+}
+.btn-primary:hover::before{left:100%}
+
+.btn-red{background:var(--red);color:#fff}
+.btn-cyan{background:var(--cyan);color:#000}
+.btn-outline{background:transparent;border:2px solid rgba(255,255,255,0.3);color:#fff}
+.btn-outline:hover{border-color:#fff}
+
+/* ===== Page 1: Home ===== */
+#home{text-align:center;padding-top:60px;position:relative;overflow:hidden}
+
+.home-bg{
+  position:absolute;top:0;left:0;right:0;bottom:0;
+  background:
+    radial-gradient(ellipse at 20% 20%,rgba(255,45,85,0.15) 0%,transparent 50%),
+    radial-gradient(ellipse at 80% 80%,rgba(0,229,255,0.1) 0%,transparent 50%);
+  pointer-events:none;
+}
+
+.magazine-title{
+  position:relative;display:inline-block;
+  padding:20px 30px;margin-bottom:20px;
+  transform:rotate(-2deg);
+}
+.magazine-title::before{
+  content:'';position:absolute;inset:-4px;
+  border:3px solid var(--red);
+  transform:rotate(1deg);
+  clip-path:polygon(2% 0%,98% 2%,100% 96%,3% 100%);
+}
+.magazine-title h1{
+  font-size:36px;font-weight:900;
+  background:linear-gradient(135deg,var(--red),var(--orange),var(--yellow));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  text-shadow:none;line-height:1.3;
+}
+.magazine-title .subtitle{
+  display:block;font-size:14px;color:var(--text-dim);
+  -webkit-text-fill-color:var(--text-dim);margin-top:8px;
+  letter-spacing:4px;
+}
+
+.critics-showcase{
+  display:flex;justify-content:center;gap:30px;margin:40px 0;
+  position:relative;
+}
+.critic-card{
+  width:150px;padding:20px 15px;
+  background:var(--bg-card);border-radius:12px;
+  backdrop-filter:blur(10px);
+  transform:rotate(var(--r,0deg));
+  border:1px solid rgba(255,255,255,0.1);
+  transition:transform 0.3s,box-shadow 0.3s;
+}
+.critic-card:hover{
+  transform:rotate(0deg) translateY(-5px);
+  box-shadow:0 10px 40px rgba(255,45,85,0.2);
+}
+.critic-avatar{
+  width:80px;height:80px;border-radius:50%;margin:0 auto 12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:40px;position:relative;
+}
+.critic-avatar::after{
+  content:'';position:absolute;inset:-3px;border-radius:50%;
+  border:2px dashed;animation:spin 10s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ding .critic-avatar{background:rgba(255,45,85,0.2)}
+.ding .critic-avatar::after{border-color:var(--red)}
+.liang .critic-avatar{background:rgba(0,229,255,0.2)}
+.liang .critic-avatar::after{border-color:var(--cyan)}
+
+.critic-name{font-size:18px;font-weight:800;margin-bottom:6px}
+.ding .critic-name{color:var(--red)}
+.liang .critic-name{color:var(--cyan)}
+.critic-tagline{font-size:12px;color:var(--text-dim);line-height:1.5}
+
+.critic-quote{
+  margin-top:12px;padding:10px;
+  background:rgba(255,255,255,0.04);border-radius:8px;
+  font-size:11px;color:rgba(255,255,255,0.7);
+  font-style:italic;line-height:1.6;
+  border-left:3px solid;
+}
+.ding .critic-quote{border-color:var(--red)}
+.liang .critic-quote{border-color:var(--cyan)}
+
+.home-actions{
+  display:flex;flex-direction:column;gap:14px;
+  max-width:320px;margin:40px auto 0;
+}
+.home-actions .btn-primary{width:100%;font-size:17px;padding:16px}
+
+.disclaimer{
+  margin-top:40px;padding:16px;
+  font-size:11px;color:var(--text-dim);
+  line-height:1.8;
+  border-top:1px dashed rgba(255,255,255,0.1);
+}
+
+/* ===== Page 2: Input ===== */
+#input-page{padding-top:20px}
+
+.input-header{
+  display:flex;align-items:center;gap:12px;margin-bottom:24px;
+}
+.back-btn{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--bg-card);color:#fff;font-size:20px;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid rgba(255,255,255,0.1);
+}
+.input-header h2{font-size:20px;font-weight:700}
+
+.input-tabs{
+  display:flex;gap:0;margin-bottom:24px;
+  border-radius:10px;overflow:hidden;
+  border:1px solid rgba(255,255,255,0.15);
+}
+.input-tab{
+  flex:1;padding:12px;text-align:center;font-size:14px;font-weight:600;
+  background:transparent;color:var(--text-dim);
+  transition:all 0.3s;
+}
+.input-tab.active{background:var(--red);color:#fff}
+
+.input-section{display:none}
+.input-section.active{display:block}
+
+.form-group{margin-bottom:20px}
+.form-label{
+  display:block;font-size:13px;color:var(--text-dim);
+  margin-bottom:8px;font-weight:600;
+}
+.form-input{
+  width:100%;padding:14px 16px;
+  background:var(--bg-card);border:1px solid rgba(255,255,255,0.1);
+  border-radius:10px;color:#fff;font-size:15px;
+  transition:border-color 0.3s;
+}
+.form-input:focus{border-color:var(--red)}
+.form-input::placeholder{color:rgba(255,255,255,0.25)}
+textarea.form-input{resize:vertical;min-height:120px;line-height:1.7}
+
+.upload-zone{
+  border:2px dashed rgba(255,255,255,0.2);border-radius:12px;
+  padding:40px 20px;text-align:center;cursor:pointer;
+  transition:all 0.3s;position:relative;overflow:hidden;
+}
+.upload-zone:hover{border-color:var(--cyan);background:rgba(0,229,255,0.04)}
+.upload-zone.has-file{border-color:var(--green);border-style:solid}
+.upload-icon{font-size:40px;margin-bottom:12px}
+.upload-text{font-size:14px;color:var(--text-dim)}
+.upload-text strong{color:#fff}
+.upload-hint{font-size:12px;color:var(--text-dim);margin-top:8px}
+.upload-filename{
+  margin-top:12px;padding:8px 14px;
+  background:rgba(34,197,94,0.15);border-radius:6px;
+  font-size:13px;color:var(--green);display:none;
+}
+.upload-zone.has-file .upload-filename{display:block}
+
+.cover-upload{
+  width:100%;height:100px;border:2px dashed rgba(255,255,255,0.15);
+  border-radius:10px;display:flex;align-items:center;justify-content:center;
+  gap:12px;cursor:pointer;transition:all 0.3s;overflow:hidden;
+  position:relative;
+}
+.cover-upload:hover{border-color:var(--pink)}
+.cover-upload img{
+  width:80px;height:80px;object-fit:cover;border-radius:8px;
+  display:none;
+}
+.cover-upload.has-cover img{display:block}
+.cover-upload .cover-placeholder{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  font-size:12px;color:var(--text-dim);
+}
+.cover-upload.has-cover .cover-placeholder{display:none}
+
+.submit-area{margin-top:30px}
+.submit-area .btn-primary{width:100%;font-size:17px;padding:16px}
+
+/* ===== Page 3: Analyzing ===== */
+#analyzing-page{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:100vh;text-align:center;
+}
+#analyzing-page.active{display:flex}
+
+.analyzing-animation{position:relative;width:200px;height:200px;margin-bottom:30px}
+.headphone-emoji{
+  font-size:80px;position:absolute;
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  animation:headphoneBob 2s ease-in-out infinite;
+}
+@keyframes headphoneBob{
+  0%,100%{transform:translate(-50%,-50%) rotate(-5deg)}
+  50%{transform:translate(-50%,-50%) rotate(5deg)}
+}
+.sound-wave{
+  position:absolute;top:50%;left:50%;
+  width:160px;height:160px;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  border:2px solid var(--red);
+  opacity:0;
+  animation:waveExpand 2s ease-out infinite;
+}
+.sound-wave:nth-child(2){animation-delay:0.5s;border-color:var(--cyan)}
+.sound-wave:nth-child(3){animation-delay:1s;border-color:var(--yellow)}
+@keyframes waveExpand{
+  0%{width:80px;height:80px;opacity:0.6}
+  100%{width:200px;height:200px;opacity:0}
+}
+
+.analyzing-text{font-size:18px;font-weight:700;margin-bottom:12px}
+.analyzing-step{font-size:13px;color:var(--text-dim);margin-bottom:30px}
+
+.bubble-container{
+  width:100%;max-width:320px;min-height:60px;
+  position:relative;
+}
+.roast-bubble{
+  padding:12px 18px;border-radius:16px;
+  font-size:13px;line-height:1.6;
+  animation:bubbleFadeIn 0.5s ease;
+  margin-bottom:12px;max-width:280px;
+}
+@keyframes bubbleFadeIn{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.roast-bubble.ding{
+  background:rgba(255,45,85,0.15);color:var(--red);
+  border:1px solid rgba(255,45,85,0.3);
+  margin-right:auto;border-bottom-left-radius:4px;
+}
+.roast-bubble.liang{
+  background:rgba(0,229,255,0.15);color:var(--cyan);
+  border:1px solid rgba(0,229,255,0.3);
+  margin-left:auto;border-bottom-right-radius:4px;
+}
+.bubble-name{font-size:11px;font-weight:700;margin-bottom:4px}
+
+/* Progress bar */
+.progress-container{
+  width:100%;max-width:280px;margin-top:20px;
+}
+.progress-bar{
+  height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;
+}
+.progress-fill{
+  height:100%;width:0%;border-radius:2px;
+  background:linear-gradient(90deg,var(--red),var(--cyan));
+  transition:width 0.5s ease;
+}
+.progress-label{
+  display:flex;justify-content:space-between;
+  font-size:11px;color:var(--text-dim);margin-top:6px;
+}
+
+/* ===== Page 4: Result ===== */
+#result-page{padding-top:20px}
+
+.result-song-info{
+  display:flex;gap:16px;align-items:center;
+  padding:16px;background:var(--bg-card);border-radius:12px;
+  margin-bottom:24px;border:1px solid rgba(255,255,255,0.08);
+}
+.result-cover{
+  width:70px;height:70px;border-radius:8px;object-fit:cover;
+  transform:rotate(-3deg);
+  box-shadow:4px 4px 0 rgba(255,45,85,0.3);
+}
+.result-song-title{font-size:18px;font-weight:800}
+.result-song-artist{font-size:13px;color:var(--text-dim);margin-top:4px}
+
+.review-card{
+  padding:20px;border-radius:14px;margin-bottom:20px;
+  position:relative;overflow:hidden;
+  border:1px solid;
+}
+.review-card.ding{
+  background:rgba(255,45,85,0.06);
+  border-color:rgba(255,45,85,0.2);
+}
+.review-card.liang{
+  background:rgba(0,229,255,0.06);
+  border-color:rgba(0,229,255,0.2);
+}
+.review-card::before{
+  content:'';position:absolute;top:0;right:0;
+  width:120px;height:120px;border-radius:50%;
+  filter:blur(60px);pointer-events:none;
+}
+.review-card.ding::before{background:rgba(255,45,85,0.15)}
+.review-card.liang::before{background:rgba(0,229,255,0.15)}
+
+.review-header{
+  display:flex;align-items:center;gap:12px;margin-bottom:16px;
+}
+.review-avatar{
+  width:44px;height:44px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;
+}
+.ding .review-avatar{background:rgba(255,45,85,0.2)}
+.liang .review-avatar{background:rgba(0,229,255,0.2)}
+.review-critic-name{font-size:16px;font-weight:700}
+.review-critic-tag{font-size:11px;color:var(--text-dim)}
+
+.review-text{
+  font-size:15px;line-height:1.8;
+  color:rgba(255,255,255,0.9);
+  margin-bottom:20px;
+  position:relative;
+}
+.review-text::before{
+  content:'"';font-size:48px;font-weight:900;
+  position:absolute;top:-15px;left:-5px;
+  opacity:0.15;
+}
+
+.review-score-big{
+  text-align:center;margin-bottom:16px;
+}
+.score-number{
+  font-size:64px;font-weight:900;
+  line-height:1;
+}
+.ding .score-number{
+  background:linear-gradient(135deg,var(--red),var(--orange));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.liang .score-number{
+  background:linear-gradient(135deg,var(--cyan),#7dd3fc);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.score-label{font-size:13px;color:var(--text-dim);margin-top:4px}
+.score-rank{
+  display:inline-block;padding:4px 12px;border-radius:20px;
+  font-size:12px;font-weight:600;margin-top:8px;
+}
+.ding .score-rank{background:rgba(255,45,85,0.2);color:var(--red)}
+.liang .score-rank{background:rgba(0,229,255,0.2);color:var(--cyan)}
+
+/* Radar Chart */
+.radar-container{
+  width:100%;max-width:200px;margin:0 auto 16px;
+  aspect-ratio:1;position:relative;
+}
+.radar-canvas{width:100%!important;height:100%!important}
+
+/* Score breakdown */
+.score-breakdown{display:flex;flex-direction:column;gap:8px}
+.score-item{
+  display:flex;align-items:center;gap:10px;font-size:13px;
+}
+.score-item-label{width:50px;text-align:right;color:var(--text-dim)}
+.score-item-bar{
+  flex:1;height:6px;background:rgba(255,255,255,0.08);
+  border-radius:3px;overflow:hidden;
+}
+.score-item-fill{height:100%;border-radius:3px;transition:width 1s ease}
+.ding .score-item-fill{background:linear-gradient(90deg,var(--red),var(--orange))}
+.liang .score-item-fill{background:linear-gradient(90deg,var(--cyan),#7dd3fc)}
+.score-item-value{width:30px;font-weight:700;font-size:12px}
+
+/* Comparison */
+.comparison-panel{
+  padding:20px;background:var(--bg-card);border-radius:14px;
+  margin-bottom:24px;border:1px solid rgba(255,255,255,0.08);
+}
+.comparison-title{
+  font-size:14px;font-weight:700;margin-bottom:16px;
+  text-align:center;color:var(--text-dim);
+}
+.comparison-scores{
+  display:flex;justify-content:center;align-items:center;gap:20px;
+  margin-bottom:16px;
+}
+.comp-score{text-align:center}
+.comp-score .name{font-size:12px;margin-bottom:4px}
+.comp-score .num{font-size:36px;font-weight:900}
+.comp-vs{
+  font-size:20px;font-weight:900;
+  color:var(--yellow);
+  animation:vsPulse 1.5s ease-in-out infinite;
+}
+@keyframes vsPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+
+.score-diff{
+  text-align:center;padding:8px;border-radius:8px;
+  font-size:13px;font-weight:600;
+  background:rgba(255,225,53,0.1);color:var(--yellow);
+}
+.score-diff.big{
+  background:rgba(255,45,85,0.15);color:var(--red);
+  animation:diffShake 0.5s ease;
+}
+@keyframes diffShake{
+  0%,100%{transform:rotate(0)}
+  25%{transform:rotate(-2deg)}
+  75%{transform:rotate(2deg)}
+}
+
+.result-actions{
+  display:flex;flex-direction:column;gap:12px;
+  max-width:360px;margin:0 auto;
+}
+.result-actions .btn-primary{width:100%;padding:14px}
+
+/* ===== Page 5: Poster ===== */
+#poster-page{padding-top:20px}
+
+.poster-preview-wrapper{
+  display:flex;justify-content:center;
+  margin-bottom:24px;
+}
+
+/* The actual poster */
+.poster{
+  width:375px;min-height:667px;
+  background:#0d0d14;
+  position:relative;overflow:hidden;
+  border-radius:4px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.5);
+}
+.poster *{box-sizing:border-box}
+
+.poster-texture{
+  position:absolute;inset:0;
+  background:
+    repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,0.01) 2px,rgba(255,255,255,0.01) 4px);
+  pointer-events:none;z-index:1;
+}
+
+.poster-header{
+  padding:24px 20px 16px;position:relative;z-index:2;
+  background:linear-gradient(135deg,rgba(255,45,85,0.2),rgba(168,85,247,0.1));
+}
+.poster-mag-title{
+  font-size:11px;letter-spacing:6px;color:var(--text-dim);
+  text-transform:uppercase;margin-bottom:8px;
+}
+.poster-main-title{
+  font-size:24px;font-weight:900;
+  background:linear-gradient(135deg,var(--red),var(--orange));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  transform:rotate(-1deg);display:inline-block;
+}
+.poster-torn{
+  height:10px;
+  background:var(--torn-edge) repeat-x bottom;
+  background-size:80px 10px;position:relative;z-index:2;
+}
+
+.poster-song{
+  display:flex;gap:14px;padding:16px 20px;
+  position:relative;z-index:2;
+}
+.poster-cover{
+  width:80px;height:80px;border-radius:6px;object-fit:cover;
+  transform:rotate(-3deg);
+  box-shadow:3px 3px 0 var(--red),6px 6px 0 rgba(255,45,85,0.3);
+}
+.poster-song-info{flex:1}
+.poster-song-name{font-size:18px;font-weight:800;margin-bottom:4px}
+.poster-artist-name{font-size:12px;color:var(--text-dim)}
+
+.poster-review{
+  margin:8px 20px;padding:14px;border-radius:10px;
+  position:relative;z-index:2;
+}
+.poster-review.ding{
+  background:rgba(255,45,85,0.08);
+  border:1px solid rgba(255,45,85,0.2);
+}
+.poster-review.liang{
+  background:rgba(0,229,255,0.08);
+  border:1px solid rgba(0,229,255,0.2);
+}
+.poster-review-header{
+  display:flex;align-items:center;gap:8px;margin-bottom:8px;
+}
+.poster-review-avatar{
+  width:28px;height:28px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;
+}
+.poster-review.ding .poster-review-avatar{background:rgba(255,45,85,0.25)}
+.poster-review.liang .poster-review-avatar{background:rgba(0,229,255,0.25)}
+.poster-review-name{font-size:12px;font-weight:700}
+.poster-review.ding .poster-review-name{color:var(--red)}
+.poster-review.liang .poster-review-name{color:var(--cyan)}
+.poster-review-score{
+  margin-left:auto;font-size:24px;font-weight:900;
+}
+.poster-review.ding .poster-review-score{color:var(--red)}
+.poster-review.liang .poster-review-score{color:var(--cyan)}
+.poster-review-text{
+  font-size:12px;line-height:1.7;
+  color:rgba(255,255,255,0.8);
+  display:-webkit-box;-webkit-line-clamp:3;
+  -webkit-box-orient:vertical;overflow:hidden;
+}
+
+.poster-radar-section{
+  display:flex;justify-content:center;
+  padding:12px 20px;position:relative;z-index:2;
+}
+.poster-radar{width:160px;height:160px}
+
+.poster-footer{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px;position:relative;z-index:2;
+  border-top:1px dashed rgba(255,255,255,0.1);
+  margin-top:8px;
+}
+.poster-qr{
+  width:60px;height:60px;border-radius:6px;
+  background:#fff;padding:4px;
+  display:flex;align-items:center;justify-content:center;
+}
+.poster-qr img{width:100%;height:100%}
+.poster-qr-text{
+  flex:1;margin-left:12px;
+}
+.poster-qr-title{font-size:12px;font-weight:700;margin-bottom:2px}
+.poster-qr-sub{font-size:10px;color:var(--text-dim);line-height:1.5}
+
+.poster-disclaimer{
+  padding:8px 20px 16px;position:relative;z-index:2;
+  font-size:9px;color:rgba(255,255,255,0.25);text-align:center;
+}
+
+/* Poster stickers */
+.poster-sticker{
+  position:absolute;z-index:3;font-size:20px;
+  pointer-events:none;
+}
+
+.poster-actions{
+  display:flex;flex-direction:column;gap:12px;
+  max-width:360px;margin:0 auto;
+}
+.poster-actions .btn-primary{width:100%;padding:14px}
+
+/* ===== History ===== */
+.history-list{display:flex;flex-direction:column;gap:12px;margin-top:16px}
+.history-item{
+  display:flex;gap:12px;align-items:center;
+  padding:14px;background:var(--bg-card);border-radius:12px;
+  border:1px solid rgba(255,255,255,0.06);cursor:pointer;
+  transition:all 0.2s;
+}
+.history-item:hover{border-color:rgba(255,255,255,0.15)}
+.history-cover{width:50px;height:50px;border-radius:6px;object-fit:cover}
+.history-info{flex:1}
+.history-song{font-size:14px;font-weight:600}
+.history-date{font-size:11px;color:var(--text-dim);margin-top:2px}
+.history-scores{text-align:right}
+.history-scores span{
+  display:inline-block;padding:2px 8px;border-radius:10px;
+  font-size:12px;font-weight:700;margin-left:4px;
+}
+.history-scores .hs-ding{background:rgba(255,45,85,0.2);color:var(--red)}
+.history-scores .hs-liang{background:rgba(0,229,255,0.2);color:var(--cyan)}
+
+/* ===== Toast ===== */
+.toast{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.8);
+  padding:16px 24px;background:rgba(0,0,0,0.85);
+  border-radius:12px;font-size:14px;color:#fff;
+  opacity:0;transition:all 0.3s;pointer-events:none;z-index:9999;
+  backdrop-filter:blur(10px);text-align:center;
+}
+.toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+
+/* ===== Responsive ===== */
+@media (max-width:400px){
+  .magazine-title h1{font-size:28px}
+  .critics-showcase{gap:16px}
+  .critic-card{width:140px;padding:16px 12px}
+  .poster{width:100%;min-height:auto}
+}
+
+/* ===== Typewriter effect ===== */
+.typewriter{overflow:hidden;border-right:2px solid;animation:blink 0.7s step-end infinite}
+@keyframes blink{50%{border-color:transparent}}
+
+/* ===== Loading shimmer ===== */
+.shimmer{
+  background:linear-gradient(90deg,rgba(255,255,255,0.03) 25%,rgba(255,255,255,0.08) 50%,rgba(255,255,255,0.03) 75%);
+  background-size:200% 100%;
+  animation:shimmer 1.5s infinite;
+}
+@keyframes shimmer{to{background-position:-200% 0}}
+</style>
+</head>
+<body>
+
+<!-- ==================== PAGE 1: HOME ==================== -->
+<div id="home" class="page active">
+  <div class="home-bg"></div>
+  
+  <!-- Stickers -->
+  <div class="sticker" style="top:15%;left:8%;--r:-15deg;animation-delay:0.2s">🎵</div>
+  <div class="sticker" style="top:12%;right:10%;--r:12deg;animation-delay:0.8s">⚡</div>
+  <div class="sticker" style="top:45%;left:5%;--r:8deg;animation-delay:1.2s">🔥</div>
+  <div class="sticker" style="top:48%;right:6%;--r:-10deg;animation-delay:0.5s">💀</div>
+  <div class="sticker" style="bottom:30%;left:10%;--r:20deg;animation-delay:1s">🎤</div>
+  <div class="sticker" style="bottom:28%;right:8%;--r:-18deg;animation-delay:0.3s">✨</div>
+
+  <div class="magazine-title">
+    <h1>我的新歌<br>怎么样？</h1>
+    <span class="subtitle">AI 辣 评 系 统</span>
+  </div>
+
+  <div class="critics-showcase">
+    <div class="critic-card ding" style="--r:-3deg">
+      <div class="critic-avatar">🔥</div>
+      <div class="critic-name">丁大升</div>
+      <div class="critic-tagline">毒舌判官<br>直球暴击</div>
+      <div class="critic-quote">"建议转行。"</div>
+    </div>
+    <div class="critic-card liang" style="--r:2deg">
+      <div class="critic-avatar">🗡️</div>
+      <div class="critic-name">良缘</div>
+      <div class="critic-tagline">温柔刺客<br>笑里藏刀</div>
+      <div class="critic-quote">"非常差。"</div>
+    </div>
+  </div>
+
+  <div class="home-actions">
+    <button class="btn-primary btn-red" onclick="showInput('link')">
+      🔗 粘贴 QQ 音乐链接
+    </button>
+    <button class="btn-primary btn-cyan" onclick="showInput('upload')">
+      🎵 上传 MP3 文件
+    </button>
+    <button class="btn-primary btn-outline" onclick="showHistory()">
+      📋 历史评测记录
+    </button>
+  </div>
+
+  <div class="disclaimer">
+    ⚠️ "丁大升"和"良缘"为 AI 虚拟乐评人角色，评价仅供娱乐参考，<br>
+    不代表任何真实人物观点。音乐无绝对好坏，做自己喜欢的音乐最重要 ❤️
+  </div>
+</div>
+
+<!-- ==================== PAGE 2: INPUT ==================== -->
+<div id="input-page" class="page">
+  <div class="input-header">
+    <button class="back-btn" onclick="showPage('home')">←</button>
+    <h2>提交你的作品</h2>
+  </div>
+
+  <div class="input-tabs">
+    <button class="input-tab active" onclick="switchInputTab('link')" id="tab-link">🔗 QQ音乐链接</button>
+    <button class="input-tab" onclick="switchInputTab('upload')" id="tab-upload">🎵 上传MP3</button>
+  </div>
+
+  <!-- Link Input -->
+  <div class="input-section active" id="section-link">
+    <div class="form-group">
+      <label class="form-label">QQ 音乐歌曲链接</label>
+      <input type="text" class="form-input" id="qq-link" 
+        placeholder="粘贴 QQ 音乐分享链接…">
+    </div>
+    <div id="link-preview" style="display:none">
+      <div class="result-song-info" style="margin-bottom:16px">
+        <img class="result-cover" id="link-cover-preview" src="" alt="">
+        <div>
+          <div class="result-song-title" id="link-song-name"></div>
+          <div class="result-song-artist" id="link-artist-name"></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">歌词（已自动获取，可编辑修正）</label>
+        <textarea class="form-input" id="link-lyrics" rows="6" placeholder="歌词内容…"></textarea>
+      </div>
+    </div>
+    <div class="submit-area">
+      <button class="btn-primary btn-red" onclick="parseLinkAndPreview()" id="btn-parse-link">
+        🔍 解析链接
+      </button>
+    </div>
+  </div>
+
+  <!-- Upload Input -->
+  <div class="input-section" id="section-upload">
+    <div class="form-group">
+      <label class="form-label">上传 MP3 文件（≤20MB）</label>
+      <div class="upload-zone" id="mp3-zone" onclick="document.getElementById('mp3-input').click()">
+        <div class="upload-icon">📂</div>
+        <div class="upload-text">点击选择或拖拽 <strong>MP3</strong> 文件</div>
+        <div class="upload-hint">支持 mp3 / wav / flac 格式</div>
+        <div class="upload-filename" id="mp3-filename"></div>
+        <input type="file" id="mp3-input" accept=".mp3,.wav,.flac" hidden>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">歌曲名称 *</label>
+      <input type="text" class="form-input" id="upload-song-name" placeholder="输入歌曲名称">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">歌手/创作者名 *</label>
+      <input type="text" class="form-input" id="upload-artist" placeholder="输入你的名字或艺名">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">封面图（可选，不传使用默认封面）</label>
+      <div class="cover-upload" id="cover-zone" onclick="document.getElementById('cover-input').click()">
+        <img id="cover-preview" src="" alt="">
+        <div class="cover-placeholder">
+          <span style="font-size:24px">🖼️</span>
+          <span>点击上传封面</span>
+        </div>
+        <input type="file" id="cover-input" accept="image/*" hidden>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">歌词（上传后将自动识别，也可手动输入）</label>
+      <textarea class="form-input" id="upload-lyrics" rows="6" 
+        placeholder="歌词将在上传音频后自动识别，您也可以直接在此输入或修正…"></textarea>
+    </div>
+
+    <div class="submit-area">
+      <button class="btn-primary btn-cyan" onclick="startAnalyze('upload')">
+        🚀 开始辣评
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PAGE 3: ANALYZING ==================== -->
+<div id="analyzing-page" class="page">
+  <div class="analyzing-animation">
+    <div class="sound-wave"></div>
+    <div class="sound-wave"></div>
+    <div class="sound-wave"></div>
+    <div class="headphone-emoji">🎧</div>
+  </div>
+  
+  <div class="analyzing-text">乐评人正在仔细听...</div>
+  <div class="analyzing-step" id="analyze-step">正在分析歌词内容</div>
+  
+  <div class="bubble-container" id="bubble-container"></div>
+
+  <div class="progress-container">
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    <div class="progress-label">
+      <span id="progress-text">分析中</span>
+      <span id="progress-percent">0%</span>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PAGE 4: RESULT ==================== -->
+<div id="result-page" class="page">
+  <div class="input-header">
+    <button class="back-btn" onclick="showPage('home')">←</button>
+    <h2>辣评结果</h2>
+  </div>
+
+  <div class="result-song-info">
+    <img class="result-cover" id="res-cover" src="" alt="">
+    <div>
+      <div class="result-song-title" id="res-song-name"></div>
+      <div class="result-song-artist" id="res-artist"></div>
+    </div>
+  </div>
+
+  <!-- 丁大升 Review -->
+  <div class="review-card ding">
+    <div class="review-header">
+      <div class="review-avatar">🔥</div>
+      <div>
+        <div class="review-critic-name">丁大升</div>
+        <div class="review-critic-tag">毒舌判官 · 直球暴击</div>
+      </div>
+    </div>
+    <div class="review-text" id="ding-review-text"></div>
+    <div class="review-score-big">
+      <div class="score-number" id="ding-total-score">0</div>
+      <div class="score-label">/ 100</div>
+      <div class="score-rank" id="ding-rank"></div>
+    </div>
+    <div class="radar-container"><canvas class="radar-canvas" id="ding-radar"></canvas></div>
+    <div class="score-breakdown" id="ding-breakdown"></div>
+  </div>
+
+  <!-- 良缘 Review -->
+  <div class="review-card liang">
+    <div class="review-header">
+      <div class="review-avatar">🗡️</div>
+      <div>
+        <div class="review-critic-name">良缘</div>
+        <div class="review-critic-tag">温柔刺客 · 笑里藏刀</div>
+      </div>
+    </div>
+    <div class="review-text" id="liang-review-text"></div>
+    <div class="review-score-big">
+      <div class="score-number" id="liang-total-score">0</div>
+      <div class="score-label">/ 100</div>
+      <div class="score-rank" id="liang-rank"></div>
+    </div>
+    <div class="radar-container"><canvas class="radar-canvas" id="liang-radar"></canvas></div>
+    <div class="score-breakdown" id="liang-breakdown"></div>
+  </div>
+
+  <!-- Comparison -->
+  <div class="comparison-panel">
+    <div class="comparison-title">⚔️ 评分对比</div>
+    <div class="comparison-scores">
+      <div class="comp-score">
+        <div class="name" style="color:var(--red)">丁大升</div>
+        <div class="num" style="color:var(--red)" id="comp-ding">0</div>
+      </div>
+      <div class="comp-vs">VS</div>
+      <div class="comp-score">
+        <div class="name" style="color:var(--cyan)">良缘</div>
+        <div class="num" style="color:var(--cyan)" id="comp-liang">0</div>
+      </div>
+    </div>
+    <div class="score-diff" id="score-diff"></div>
+  </div>
+
+  <div class="result-actions">
+    <button class="btn-primary btn-red" onclick="generatePoster()">🖼️ 生成分享海报</button>
+    <button class="btn-primary btn-cyan" onclick="showPage('home')">🎵 换一首再战</button>
+    <button class="btn-primary btn-outline" onclick="showHistory()">📋 查看历史</button>
+  </div>
+</div>
+
+<!-- ==================== PAGE 5: POSTER ==================== -->
+<div id="poster-page" class="page">
+  <div class="input-header">
+    <button class="back-btn" onclick="showPage('result-page')">←</button>
+    <h2>分享海报</h2>
+  </div>
+
+  <div class="poster-preview-wrapper">
+    <div class="poster" id="poster-canvas">
+      <div class="poster-texture"></div>
+      
+      <!-- Stickers -->
+      <div class="poster-sticker" style="top:12px;right:15px;transform:rotate(15deg)">⚡</div>
+      <div class="poster-sticker" style="top:60px;left:10px;transform:rotate(-10deg)">🎵</div>
+      <div class="poster-sticker" style="bottom:120px;right:12px;transform:rotate(20deg)">✨</div>
+
+      <div class="poster-header">
+        <div class="poster-mag-title">AI 辣 评 系 统</div>
+        <div class="poster-main-title">我的新歌怎么样？</div>
+      </div>
+      <div class="poster-torn"></div>
+
+      <div class="poster-song">
+        <img class="poster-cover" id="poster-cover" src="" alt="">
+        <div class="poster-song-info">
+          <div class="poster-song-name" id="poster-song-name"></div>
+          <div class="poster-artist-name" id="poster-artist-name"></div>
+        </div>
+      </div>
+
+      <div class="poster-review ding">
+        <div class="poster-review-header">
+          <div class="poster-review-avatar">🔥</div>
+          <div class="poster-review-name">丁大升</div>
+          <div class="poster-review-score" id="poster-ding-score"></div>
+        </div>
+        <div class="poster-review-text" id="poster-ding-text"></div>
+      </div>
+
+      <div class="poster-review liang">
+        <div class="poster-review-header">
+          <div class="poster-review-avatar">🗡️</div>
+          <div class="poster-review-name">良缘</div>
+          <div class="poster-review-score" id="poster-liang-score"></div>
+        </div>
+        <div class="poster-review-text" id="poster-liang-text"></div>
+      </div>
+
+      <div class="poster-radar-section">
+        <canvas class="poster-radar" id="poster-radar"></canvas>
+      </div>
+
+      <div class="poster-footer">
+        <div class="poster-qr" id="poster-qr-container">
+          <canvas id="poster-qr-canvas"></canvas>
+        </div>
+        <div class="poster-qr-text">
+          <div class="poster-qr-title">扫码体验辣评</div>
+          <div class="poster-qr-sub">上传你的歌<br>看看乐评人怎么说</div>
+        </div>
+      </div>
+
+      <div class="poster-disclaimer">
+        AI 虚拟乐评仅供娱乐 · 做自己喜欢的音乐最重要 ❤️
+      </div>
+    </div>
+  </div>
+
+  <div class="poster-actions">
+    <button class="btn-primary btn-red" onclick="savePoster()">💾 保存到相册</button>
+    <button class="btn-primary btn-outline" onclick="showPage('result-page')">← 返回结果</button>
+  </div>
+</div>
+
+<!-- ==================== PAGE 6: HISTORY ==================== -->
+<div id="history-page" class="page">
+  <div class="input-header">
+    <button class="back-btn" onclick="showPage('home')">←</button>
+    <h2>历史评测记录</h2>
+  </div>
+  <div class="history-list" id="history-list">
+    <div style="text-align:center;color:var(--text-dim);padding:40px 0;">
+      还没有评测记录，快去提交你的第一首歌吧！
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- QR Code Lib (lightweight) -->
+<script>
+// ===== Simple QR Code Generator =====
+// Using a minimal QR implementation for the poster
+const QRCode=(function(){
+  function QR(t,e){this.typeNumber=t;this.errorCorrectLevel=e;this.modules=null;this.moduleCount=0;this.dataCache=null;this.dataList=[]}
+  // Simplified - we'll draw a placeholder QR in the demo
+  return{generate:function(url,canvas,size){
+    const ctx=canvas.getContext('2d');
+    canvas.width=size;canvas.height=size;
+    ctx.fillStyle='#fff';ctx.fillRect(0,0,size,size);
+    ctx.fillStyle='#000';
+    // Draw a stylized QR-like pattern
+    const s=size,u=Math.floor(s/25);
+    for(let i=0;i<25;i++){for(let j=0;j<25;j++){
+      if(i<7&&j<7||i<7&&j>17||i>17&&j<7){ctx.fillRect(i*u,j*u,u,u);continue}
+      if(Math.random()>0.5)ctx.fillRect(i*u,j*u,u,u);
+    }}
+    // Corner squares
+    const drawCorner=(x,y)=>{
+      ctx.fillStyle='#000';ctx.fillRect(x,y,7*u,7*u);
+      ctx.fillStyle='#fff';ctx.fillRect(x+u,y+u,5*u,5*u);
+      ctx.fillStyle='#000';ctx.fillRect(x+2*u,y+2*u,3*u,3*u);
+    };
+    drawCorner(0,0);drawCorner(18*u,0);drawCorner(0,18*u);
+  }};
+})();
+
+// ===== State Management =====
+let currentReview = null;
+const DEFAULT_COVER = 'data:image/svg+xml,' + encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <rect fill="#1a1a2e" width="200" height="200"/>
+  <text x="100" y="80" text-anchor="middle" fill="#333" font-size="48">🎵</text>
+  <text x="100" y="120" text-anchor="middle" fill="#555" font-size="14" font-family="sans-serif">未命名杰作</text>
+  <text x="100" y="145" text-anchor="middle" fill="#333" font-size="10" font-family="sans-serif">封面？不重要。音乐说了算。</text>
+</svg>`);
+
+// ===== Demo Mock Data =====
+const MOCK_REVIEWS = {
+  ding: {
+    reviews: [
+      "这是一首非常典型的「自我感动型」创作。整首歌的和声进行毫无惊喜，I-V-vi-IV走了个遍，连个离调都不敢给。旋律线像是在MIDI键盘上随手弹的，没有任何记忆点。最要命的是人声处理——Auto-Tune开到飞起还以为我们听不出来。编曲堆了一堆合成器音色，看似丰满实则杂乱，像是把Splice上的Loop随机拼贴。这不叫创作，这叫组装。建议先把基本功练好再来。",
+      "又一首「假装深刻」的作品。歌词通篇都是无病呻吟，每一句都像是从网易云热评里复制粘贴的。什么「月光洒在孤独的窗台」「你走后我的世界下起了雨」——2026年了还写这种词，是对中文的不尊重。旋律倒是流畅，可惜流畅到毫无个性，像是AI随机生成的产物。编曲用了点Lo-fi元素就以为自己很潮？拜托，这种审美落后了至少三年。",
+      "说实话，这首歌让我意外。不是因为它好，而是因为它比我预想的更无聊。我以为独立音乐人至少会有点野心，结果交上来的是一首标准的「选秀晋级曲」——用力飙高音、副歌强行升key、Bridge来段假声转音。典型的杂技型歌曲，类似于胸口碎大石，毫无美感。音乐的本质是表达，不是炫技。"
+    ],
+    scores: [
+      {melody:45, lyrics:35, arrangement:40, vocal:50, innovation:25},
+      {melody:55, lyrics:30, arrangement:45, vocal:55, innovation:30},
+      {melody:50, lyrics:40, arrangement:35, vocal:60, innovation:20},
+    ]
+  },
+  liang: {
+    reviews: [
+      "怎么说呢。这首歌的问题不在技术层面——录音干净，混音过得去，人声也算稳。问题在于，它从头到尾都透着一种精心计算过的「安全感」。每一个音符都踩在正确的位置，每一句歌词都在说正确的话，结果就是：正确到令人窒息。音乐最珍贵的东西是破绽，是那些不完美但真实的瞬间。这首歌太完美了，完美到没有灵魂。",
+      "歌词是直男癌式的自我感动，拧巴无力。整首歌都笼罩在一种小气的抱怨感里，仿佛全世界都对不起创作者。旋律有几个不错的动机，但都淹没在过度填充的编曲里了——你塞了太多东西，反而让每一个元素都没有呼吸的空间。学会做减法，是创作者成熟的第一步。这种音乐谈什么棱角？",
+      "我一个字一个字地听了三遍。第一遍觉得平淡，第二遍发现了一些细节，第三遍……我承认，副歌的旋律走向确实有意思，特别是第二段副歌结尾那个半音下行，是整首歌最有灵气的瞬间。歌词还需要打磨，有些句子太刻意了，但核心的情感表达是真诚的。编曲偏保守，建议大胆一些。这是一首有潜力但还没完成的作品。"
+    ],
+    scores: [
+      {melody:55, lyrics:50, arrangement:48, vocal:60, innovation:35},
+      {melody:50, lyrics:35, arrangement:40, vocal:55, innovation:30},
+      {melody:70, lyrics:58, arrangement:52, vocal:65, innovation:55},
+    ]
+  }
+};
+
+const ROAST_BUBBLES = [
+  {critic:'ding', text:'又来一个自信的选手……'},
+  {critic:'liang', text:'让我仔细听听。'},
+  {critic:'ding', text:'这前奏就很不妙。'},
+  {critic:'liang', text:'嗯……有意思。'},
+  {critic:'ding', text:'副歌能不能别再升key了？'},
+  {critic:'liang', text:'歌词需要好好聊聊。'},
+  {critic:'ding', text:'我已经开始犯困了。'},
+  {critic:'liang', text:'编曲有一些想法，但……'},
+  {critic:'ding', text:'这高音飙得我头疼。'},
+  {critic:'liang', text:'情感表达上……算了。'},
+];
+
+const ANALYZE_STEPS = [
+  '正在分析歌词内容',
+  '正在提取音频特征',
+  '正在分析旋律走向',
+  '正在评估人声表现',
+  '正在分析编曲结构',
+  '丁大升正在组织毒舌语言',
+  '良缘正在磨刀',
+  '正在生成辣评报告',
+];
+
+const RANK_MAP = {
+  ding: {
+    90: '行吧，勉强算首好歌', 80: '比大部分烂歌强',
+    70: '一般般，别太自信', 60: '能听完算我输',
+    50: '建议转行', 40: '纯粹浪费时间',
+    30: '求求你别做音乐了', 0: '我的耳朵犯了什么罪'
+  },
+  liang: {
+    90: '值得被更多人听到', 80: '有可圈可点的地方',
+    70: '还需要打磨', 60: '差点意思',
+    50: '方向可能走偏了', 40: '需要重新思考',
+    30: '这不是音乐该有的样子', 0: '……'
+  }
+};
+
+function getRank(critic, score) {
+  const map = RANK_MAP[critic];
+  for (const [threshold, label] of Object.entries(map).sort((a,b) => b[0] - a[0])) {
+    if (score >= parseInt(threshold)) return label;
+  }
+  return map[0];
+}
+
+// ===== Page Navigation =====
+function showPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(pageId).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function showInput(mode) {
+  showPage('input-page');
+  switchInputTab(mode);
+}
+
+function showHistory() {
+  showPage('history-page');
+  renderHistory();
+}
+
+// ===== Input Tab Switch =====
+function switchInputTab(tab) {
+  document.querySelectorAll('.input-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.input-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('section-' + tab).classList.add('active');
+}
+
+// ===== File Upload Handlers =====
+document.getElementById('mp3-input').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 20 * 1024 * 1024) {
+    showToast('⚠️ 文件不能超过 20MB');
+    return;
+  }
+  const zone = document.getElementById('mp3-zone');
+  const fname = document.getElementById('mp3-filename');
+  zone.classList.add('has-file');
+  fname.textContent = '✅ ' + file.name + ' (' + (file.size / 1024 / 1024).toFixed(1) + 'MB)';
+  fname.style.display = 'block';
+  // Simulate whisper recognition
+  setTimeout(() => {
+    document.getElementById('upload-lyrics').value = '（歌词自动识别中……）';
+    setTimeout(() => {
+      document.getElementById('upload-lyrics').value = 
+        '示例歌词 - 自动识别结果\n\n月光穿过窗帘的缝隙\n你的影子还留在这里\n我以为遗忘是件容易的事\n却在每个深夜想起你\n\n副歌：\n我们之间隔着一整个银河\n你在那头 我在这头\n满天星光都是我说不出口的话\n\n（以上为模拟识别结果，请根据实际歌词修正）';
+      showToast('🎤 歌词识别完成，请检查修正');
+    }, 1500);
+  }, 500);
+});
+
+document.getElementById('cover-input').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    const img = document.getElementById('cover-preview');
+    img.src = evt.target.result;
+    document.getElementById('cover-zone').classList.add('has-cover');
+  };
+  reader.readAsDataURL(file);
+});
+
+// ===== Link Parse (Demo) =====
+function parseLinkAndPreview() {
+  const link = document.getElementById('qq-link').value.trim();
+  if (!link) {
+    showToast('请先粘贴 QQ 音乐链接');
+    return;
+  }
+  showToast('🔍 正在解析链接…');
+  
+  // Demo: simulate API response
+  setTimeout(() => {
+    document.getElementById('link-cover-preview').src = DEFAULT_COVER;
+    document.getElementById('link-song-name').textContent = '月光下的忧伤';
+    document.getElementById('link-artist-name').textContent = '独立音乐人Demo';
+    document.getElementById('link-lyrics').value = 
+      '月光穿过窗帘的缝隙\n你的影子还留在这里\n我以为遗忘是件容易的事\n却在每个深夜想起你\n\n副歌：\n我们之间隔着一整个银河\n你在那头 我在这头\n满天星光都是我说不出口的话';
+    document.getElementById('link-preview').style.display = 'block';
+    
+    // Change button to submit
+    const btn = document.getElementById('btn-parse-link');
+    btn.textContent = '🚀 开始辣评';
+    btn.onclick = () => startAnalyze('link');
+  }, 1000);
+}
+
+// ===== Start Analysis =====
+function startAnalyze(mode) {
+  let songName, artistName, coverSrc, lyrics;
+  
+  if (mode === 'link') {
+    songName = document.getElementById('link-song-name').textContent;
+    artistName = document.getElementById('link-artist-name').textContent;
+    coverSrc = document.getElementById('link-cover-preview').src;
+    lyrics = document.getElementById('link-lyrics').value;
+  } else {
+    songName = document.getElementById('upload-song-name').value.trim();
+    artistName = document.getElementById('upload-artist').value.trim();
+    if (!songName || !artistName) {
+      showToast('请填写歌曲名称和歌手名');
+      return;
+    }
+    if (!document.getElementById('mp3-input').files.length) {
+      showToast('请先上传 MP3 文件');
+      return;
+    }
+    const coverImg = document.getElementById('cover-preview');
+    coverSrc = coverImg.src || DEFAULT_COVER;
+    if (!coverSrc || coverSrc === window.location.href) coverSrc = DEFAULT_COVER;
+    lyrics = document.getElementById('upload-lyrics').value;
+  }
+  
+  // Store for result
+  currentReview = {
+    songName, artistName, coverSrc, lyrics, mode,
+    timestamp: new Date().toISOString()
+  };
+  
+  showPage('analyzing-page');
+  runAnalysis();
+}
+
+// ===== Analysis Animation =====
+function runAnalysis() {
+  const fill = document.getElementById('progress-fill');
+  const stepEl = document.getElementById('analyze-step');
+  const percentEl = document.getElementById('progress-percent');
+  const container = document.getElementById('bubble-container');
+  container.innerHTML = '';
+  
+  let progress = 0;
+  let stepIdx = 0;
+  let bubbleIdx = 0;
+  
+  const progressInterval = setInterval(() => {
+    progress += Math.random() * 8 + 2;
+    if (progress > 95) progress = 95;
+    fill.style.width = progress + '%';
+    percentEl.textContent = Math.round(progress) + '%';
+    
+    // Update step
+    const newStep = Math.floor(progress / (100 / ANALYZE_STEPS.length));
+    if (newStep !== stepIdx && newStep < ANALYZE_STEPS.length) {
+      stepIdx = newStep;
+      stepEl.textContent = ANALYZE_STEPS[stepIdx];
+    }
+  }, 400);
+  
+  // Show bubbles
+  const bubbleInterval = setInterval(() => {
+    if (bubbleIdx >= ROAST_BUBBLES.length) {
+      bubbleIdx = 0;
+      container.innerHTML = '';
+    }
+    const b = ROAST_BUBBLES[bubbleIdx++];
+    const div = document.createElement('div');
+    div.className = 'roast-bubble ' + b.critic;
+    div.innerHTML = `<div class="bubble-name">${b.critic === 'ding' ? '🔥 丁大升' : '🗡️ 良缘'}</div>${b.text}`;
+    container.appendChild(div);
+    // Keep only last 3
+    while (container.children.length > 3) container.removeChild(container.firstChild);
+  }, 2500);
+  
+  // Complete after 6 seconds
+  setTimeout(() => {
+    clearInterval(progressInterval);
+    clearInterval(bubbleInterval);
+    fill.style.width = '100%';
+    percentEl.textContent = '100%';
+    stepEl.textContent = '辣评生成完毕！';
+    
+    setTimeout(() => {
+      generateReview();
+      showPage('result-page');
+    }, 800);
+  }, 6000);
+}
+
+// ===== Generate Review (Mock) =====
+function generateReview() {
+  const idx = Math.floor(Math.random() * 3);
+  
+  const dingReview = MOCK_REVIEWS.ding.reviews[idx];
+  const dingScores = MOCK_REVIEWS.ding.scores[idx];
+  const liangReview = MOCK_REVIEWS.liang.reviews[idx];
+  const liangScores = MOCK_REVIEWS.liang.scores[idx];
+  
+  // Calculate totals
+  const calcTotal = (s) => Math.round(s.melody * 0.25 + s.lyrics * 0.20 + s.arrangement * 0.20 + s.vocal * 0.20 + s.innovation * 0.15);
+  const dingTotal = calcTotal(dingScores);
+  const liangTotal = calcTotal(liangScores);
+  
+  // Store in current review
+  currentReview.dingReview = dingReview;
+  currentReview.dingScores = dingScores;
+  currentReview.dingTotal = dingTotal;
+  currentReview.liangReview = liangReview;
+  currentReview.liangScores = liangScores;
+  currentReview.liangTotal = liangTotal;
+  
+  // Save to history
+  saveToHistory(currentReview);
+  
+  // Render result
+  renderResult();
+}
+
+function renderResult() {
+  const r = currentReview;
+  
+  // Song info
+  document.getElementById('res-cover').src = r.coverSrc || DEFAULT_COVER;
+  document.getElementById('res-song-name').textContent = r.songName;
+  document.getElementById('res-artist').textContent = r.artistName;
+  
+  // Ding review
+  typewriterEffect('ding-review-text', r.dingReview);
+  animateScore('ding-total-score', r.dingTotal);
+  document.getElementById('ding-rank').textContent = getRank('ding', r.dingTotal);
+  renderBreakdown('ding-breakdown', r.dingScores, 'ding');
+  setTimeout(() => drawRadar('ding-radar', r.dingScores, 'rgba(255,45,85,'), 500);
+  
+  // Liang review
+  typewriterEffect('liang-review-text', r.liangReview);
+  animateScore('liang-total-score', r.liangTotal);
+  document.getElementById('liang-rank').textContent = getRank('liang', r.liangTotal);
+  renderBreakdown('liang-breakdown', r.liangScores, 'liang');
+  setTimeout(() => drawRadar('liang-radar', r.liangScores, 'rgba(0,229,255,'), 500);
+  
+  // Comparison
+  animateScore('comp-ding', r.dingTotal);
+  animateScore('comp-liang', r.liangTotal);
+  const diff = Math.abs(r.dingTotal - r.liangTotal);
+  const diffEl = document.getElementById('score-diff');
+  diffEl.textContent = `分差 ${diff} 分` + (diff > 20 ? ' 🔥 观点大碰撞！' : '');
+  diffEl.className = 'score-diff' + (diff > 20 ? ' big' : '');
+}
+
+// ===== Typewriter Effect =====
+function typewriterEffect(elementId, text) {
+  const el = document.getElementById(elementId);
+  el.textContent = '';
+  el.classList.add('typewriter');
+  let i = 0;
+  const interval = setInterval(() => {
+    el.textContent += text[i];
+    i++;
+    if (i >= text.length) {
+      clearInterval(interval);
+      el.classList.remove('typewriter');
+    }
+  }, 30);
+}
+
+// ===== Animate Score =====
+function animateScore(elementId, target) {
+  const el = document.getElementById(elementId);
+  let current = 0;
+  const step = target / 30;
+  const interval = setInterval(() => {
+    current += step;
+    if (current >= target) {
+      current = target;
+      clearInterval(interval);
+    }
+    el.textContent = Math.round(current);
+  }, 40);
+}
+
+// ===== Render Score Breakdown =====
+function renderBreakdown(containerId, scores, critic) {
+  const container = document.getElementById(containerId);
+  const dims = [
+    {key:'melody', label:'🎵 旋律'},
+    {key:'lyrics', label:'📝 歌词'},
+    {key:'arrangement', label:'🎹 编曲'},
+    {key:'vocal', label:'🎤 人声'},
+    {key:'innovation', label:'✨ 创新'}
+  ];
+  container.innerHTML = dims.map(d => `
+    <div class="score-item">
+      <span class="score-item-label">${d.label}</span>
+      <div class="score-item-bar">
+        <div class="score-item-fill" style="width:0%;transition-delay:${Math.random()*0.5}s" data-target="${scores[d.key]}%"></div>
+      </div>
+      <span class="score-item-value">${scores[d.key]}</span>
+    </div>
+  `).join('');
+  
+  // Animate bars
+  setTimeout(() => {
+    container.querySelectorAll('.score-item-fill').forEach(bar => {
+      bar.style.width = bar.dataset.target;
+    });
+  }, 100);
+}
+
+// ===== Draw Radar Chart =====
+function drawRadar(canvasId, scores, colorBase) {
+  const canvas = document.getElementById(canvasId);
+  const ctx = canvas.getContext('2d');
+  const size = canvas.parentElement.clientWidth;
+  canvas.width = size * 2;
+  canvas.height = size * 2;
+  canvas.style.width = size + 'px';
+  canvas.style.height = size + 'px';
+  ctx.scale(2, 2);
+  
+  const cx = size / 2, cy = size / 2, r = size * 0.38;
+  const dims = ['melody', 'lyrics', 'arrangement', 'vocal', 'innovation'];
+  const labels = ['旋律', '歌词', '编曲', '人声', '创新'];
+  const n = 5;
+  
+  // Background rings
+  for (let ring = 1; ring <= 4; ring++) {
+    ctx.beginPath();
+    for (let i = 0; i <= n; i++) {
+      const angle = (Math.PI * 2 * i / n) - Math.PI / 2;
+      const rr = r * ring / 4;
+      const x = cx + rr * Math.cos(angle);
+      const y = cy + rr * Math.sin(angle);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+  
+  // Axes
+  for (let i = 0; i < n; i++) {
+    const angle = (Math.PI * 2 * i / n) - Math.PI / 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + r * Math.cos(angle), cy + r * Math.sin(angle));
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+    ctx.stroke();
+  }
+  
+  // Data polygon
+  ctx.beginPath();
+  for (let i = 0; i <= n; i++) {
+    const idx = i % n;
+    const angle = (Math.PI * 2 * idx / n) - Math.PI / 2;
+    const val = scores[dims[idx]] / 100;
+    const x = cx + r * val * Math.cos(angle);
+    const y = cy + r * val * Math.sin(angle);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fillStyle = colorBase + '0.15)';
+  ctx.fill();
+  ctx.strokeStyle = colorBase + '0.8)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  
+  // Data points
+  for (let i = 0; i < n; i++) {
+    const angle = (Math.PI * 2 * i / n) - Math.PI / 2;
+    const val = scores[dims[i]] / 100;
+    const x = cx + r * val * Math.cos(angle);
+    const y = cy + r * val * Math.sin(angle);
+    ctx.beginPath();
+    ctx.arc(x, y, 3, 0, Math.PI * 2);
+    ctx.fillStyle = colorBase + '1)';
+    ctx.fill();
+  }
+  
+  // Labels
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.font = '11px -apple-system, PingFang SC, sans-serif';
+  ctx.textAlign = 'center';
+  for (let i = 0; i < n; i++) {
+    const angle = (Math.PI * 2 * i / n) - Math.PI / 2;
+    const lx = cx + (r + 18) * Math.cos(angle);
+    const ly = cy + (r + 18) * Math.sin(angle);
+    ctx.fillText(labels[i], lx, ly + 4);
+  }
+}
+
+// ===== Generate Poster =====
+function generatePoster() {
+  const r = currentReview;
+  
+  // Fill poster content
+  document.getElementById('poster-cover').src = r.coverSrc || DEFAULT_COVER;
+  document.getElementById('poster-song-name').textContent = r.songName;
+  document.getElementById('poster-artist-name').textContent = r.artistName;
+  document.getElementById('poster-ding-score').textContent = r.dingTotal;
+  document.getElementById('poster-ding-text').textContent = r.dingReview;
+  document.getElementById('poster-liang-score').textContent = r.liangTotal;
+  document.getElementById('poster-liang-text').textContent = r.liangReview;
+  
+  // Draw QR code
+  const qrCanvas = document.getElementById('poster-qr-canvas');
+  QRCode.generate('https://y.qq.com/viber_pub/lapingdts/index.html?ADTAG=QRcode', qrCanvas, 52);
+  
+  // Draw radar
+  setTimeout(() => {
+    drawDualRadar('poster-radar', r.dingScores, r.liangScores);
+  }, 200);
+  
+  showPage('poster-page');
+}
+
+function drawDualRadar(canvasId, dScores, lScores) {
+  const canvas = document.getElementById(canvasId);
+  const size = 160;
+  canvas.width = size * 2;
+  canvas.height = size * 2;
+  canvas.style.width = size + 'px';
+  canvas.style.height = size + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(2, 2);
+  
+  const cx = size / 2, cy = size / 2, r = size * 0.35;
+  const dims = ['melody', 'lyrics', 'arrangement', 'vocal', 'innovation'];
+  const labels = ['旋律', '歌词', '编曲', '人声', '创新'];
+  const n = 5;
+  
+  // Background
+  for (let ring = 1; ring <= 4; ring++) {
+    ctx.beginPath();
+    for (let i = 0; i <= n; i++) {
+      const angle = (Math.PI * 2 * i / n) - Math.PI / 2;
+      const rr = r * ring / 4;
+      const x = cx + rr * Math.cos(angle);
+      const y = cy + rr * Math.sin(angle);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    ctx.stroke();
+  }
+  
+  // Ding data
+  ctx.beginPath();
+  for (let i = 0; i <= n; i++) {
+    const idx = i % n;
+    const angle = (Math.PI * 2 * idx / n) - Math.PI / 2;
+    const x = cx + r * (dScores[dims[idx]] / 100) * Math.cos(angle);
+    const y = cy + r * (dScores[dims[idx]] / 100) * Math.sin(angle);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(255,45,85,0.15)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,45,85,0.7)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  
+  // Liang data
+  ctx.beginPath();
+  for (let i = 0; i <= n; i++) {
+    const idx = i % n;
+    const angle = (Math.PI * 2 * idx / n) - Math.PI / 2;
+    const x = cx + r * (lScores[dims[idx]] / 100) * Math.cos(angle);
+    const y = cy + r * (lScores[dims[idx]] / 100) * Math.sin(angle);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(0,229,255,0.15)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,229,255,0.7)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  
+  // Labels
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.font = '9px sans-serif';
+  ctx.textAlign = 'center';
+  for (let i = 0; i < n; i++) {
+    const angle = (Math.PI * 2 * i / n) - Math.PI / 2;
+    ctx.fillText(labels[i], cx + (r + 14) * Math.cos(angle), cy + (r + 14) * Math.sin(angle) + 3);
+  }
+}
+
+// ===== Save Poster =====
+function savePoster() {
+  // In a real app, use html2canvas
+  // For demo, show a toast
+  showToast('📸 海报已保存到相册！（Demo模式）');
+  
+  // Attempt real save using canvas approach
+  try {
+    const posterEl = document.getElementById('poster-canvas');
+    // If html2canvas is available...
+    if (typeof html2canvas !== 'undefined') {
+      html2canvas(posterEl, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#0d0d14'
+      }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `辣评海报_${currentReview.songName}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        showToast('📸 海报已保存！');
+      });
+    }
+  } catch(e) {
+    // Fallback handled by toast above
+  }
+}
+
+// ===== History =====
+function saveToHistory(review) {
+  const history = JSON.parse(localStorage.getItem('lapin_history') || '[]');
+  history.unshift({
+    id: Date.now(),
+    songName: review.songName,
+    artistName: review.artistName,
+    coverSrc: review.coverSrc === DEFAULT_COVER ? null : review.coverSrc,
+    dingTotal: review.dingTotal,
+    liangTotal: review.liangTotal,
+    dingReview: review.dingReview,
+    liangReview: review.liangReview,
+    dingScores: review.dingScores,
+    liangScores: review.liangScores,
+    timestamp: review.timestamp
+  });
+  // Keep last 50
+  if (history.length > 50) history.length = 50;
+  localStorage.setItem('lapin_history', JSON.stringify(history));
+}
+
+function renderHistory() {
+  const history = JSON.parse(localStorage.getItem('lapin_history') || '[]');
+  const container = document.getElementById('history-list');
+  
+  if (history.length === 0) {
+    container.innerHTML = '<div style="text-align:center;color:var(--text-dim);padding:40px 0;">还没有评测记录，快去提交你的第一首歌吧！</div>';
+    return;
+  }
+  
+  container.innerHTML = history.map(h => `
+    <div class="history-item" onclick="loadHistoryItem(${h.id})">
+      <img class="history-cover" src="${h.coverSrc || DEFAULT_COVER}" alt="">
+      <div class="history-info">
+        <div class="history-song">${h.songName}</div>
+        <div class="history-date">${new Date(h.timestamp).toLocaleDateString('zh-CN')}</div>
+      </div>
+      <div class="history-scores">
+        <span class="hs-ding">🔥${h.dingTotal}</span>
+        <span class="hs-liang">🗡️${h.liangTotal}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function loadHistoryItem(id) {
+  const history = JSON.parse(localStorage.getItem('lapin_history') || '[]');
+  const item = history.find(h => h.id === id);
+  if (!item) return;
+  
+  currentReview = {
+    songName: item.songName,
+    artistName: item.artistName,
+    coverSrc: item.coverSrc || DEFAULT_COVER,
+    dingReview: item.dingReview,
+    dingScores: item.dingScores,
+    dingTotal: item.dingTotal,
+    liangReview: item.liangReview,
+    liangScores: item.liangScores,
+    liangTotal: item.liangTotal,
+    timestamp: item.timestamp
+  };
+  showPage('result-page');
+  renderResult();
+}
+
+// ===== Toast =====
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+// ===== Drag & Drop for MP3 =====
+const mp3Zone = document.getElementById('mp3-zone');
+mp3Zone.addEventListener('dragover', (e) => { e.preventDefault(); mp3Zone.style.borderColor = 'var(--cyan)'; });
+mp3Zone.addEventListener('dragleave', () => { mp3Zone.style.borderColor = ''; });
+mp3Zone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  mp3Zone.style.borderColor = '';
+  const file = e.dataTransfer.files[0];
+  if (file) {
+    const input = document.getElementById('mp3-input');
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    input.files = dt.files;
+    input.dispatchEvent(new Event('change'));
+  }
+});
+</script>
+
+<!-- html2canvas CDN for real poster saving -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
+
+</body>
+</html>
