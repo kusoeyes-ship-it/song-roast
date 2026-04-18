@@ -951,12 +951,12 @@ textarea.form-input{resize:vertical;min-height:120px;line-height:1.7}
   <div class="input-step">
     <div class="step-header">
       <span class="step-num">1</span>
-      <span class="step-title">QQ 音乐链接 <span style="color:var(--text-dim);font-size:12px">（获取歌曲信息 & 歌词）</span></span>
+      <span class="step-title">QQ 音乐链接 <span style="color:var(--text-dim);font-size:12px">（获取歌名 / 封面 / 歌词）</span></span>
       <span class="step-optional">可选</span>
     </div>
     <div class="form-group">
       <input type="text" class="form-input" id="qq-link" 
-        placeholder="粘贴 QQ 音乐分享链接，自动获取歌名/封面/歌词">
+        placeholder="粘贴 QQ 音乐分享链接，自动获取歌名 / 封面 / 歌词">
     </div>
     <button class="btn-small btn-cyan" onclick="parseLinkAndPreview()" id="btn-parse-link">
       🔍 解析链接
@@ -1018,9 +1018,19 @@ textarea.form-input{resize:vertical;min-height:120px;line-height:1.7}
       </div>
     </div>
     <div class="form-group">
-      <label class="form-label">歌词 <span style="color:var(--text-dim);font-size:12px">（QQ音乐链接已解析则自动填充）</span></label>
+      <label class="form-label">歌词 *</label>
+      <div style="font-size:11px;color:var(--text-dim);margin-bottom:8px">
+        QQ音乐链接解析成功则自动填充 · 也可上传歌词文件（.txt/.lrc）或手动填写
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <button class="btn-small btn-cyan" onclick="document.getElementById('lyrics-file-input').click()" style="font-size:12px;padding:6px 12px">
+          📄 上传歌词文件
+        </button>
+        <input type="file" id="lyrics-file-input" accept=".txt,.lrc,.doc,.docx" hidden onchange="handleLyricsFile(this)">
+        <span id="lyrics-file-name" style="font-size:11px;color:var(--text-dim);line-height:30px"></span>
+      </div>
       <textarea class="form-input" id="upload-lyrics" rows="6" 
-        placeholder="粘贴歌词，或通过上方 QQ 音乐链接自动获取"></textarea>
+        placeholder="在此粘贴歌词&#10;&#10;支持方式：&#10;1. 上方 QQ 音乐链接解析自动填充&#10;2. 点击「上传歌词文件」选择 .txt / .lrc 文件&#10;3. 直接在此手动输入或粘贴"></textarea>
     </div>
   </div>
 
@@ -1429,16 +1439,25 @@ document.getElementById('mp3-input').addEventListener('change', function(e) {
   zone.classList.add('has-file');
   fname.textContent = '✅ ' + file.name + ' (' + (file.size / 1024 / 1024).toFixed(1) + 'MB)';
   fname.style.display = 'block';
-  // Simulate whisper recognition
-  setTimeout(() => {
-    document.getElementById('upload-lyrics').value = '（歌词自动识别中……）';
-    setTimeout(() => {
-      document.getElementById('upload-lyrics').value = 
-        '示例歌词 - 自动识别结果\n\n月光穿过窗帘的缝隙\n你的影子还留在这里\n我以为遗忘是件容易的事\n却在每个深夜想起你\n\n副歌：\n我们之间隔着一整个银河\n你在那头 我在这头\n满天星光都是我说不出口的话\n\n（以上为模拟识别结果，请根据实际歌词修正）';
-      showToast('🎤 歌词识别完成，请检查修正');
-    }, 1500);
-  }, 500);
 });
+
+// 歌词文件上传处理
+function handleLyricsFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const nameEl = document.getElementById('lyrics-file-name');
+  nameEl.textContent = '📄 ' + file.name;
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    let text = e.target.result;
+    // 清理 LRC 时间标签 [00:12.34]
+    text = text.replace(/\[\d+:\d+[\.:]\d+\]/g, '').replace(/\n{3,}/g, '\n\n').trim();
+    document.getElementById('upload-lyrics').value = text;
+    showToast('📄 歌词已导入，请检查确认');
+  };
+  reader.readAsText(file);
+}
 
 document.getElementById('cover-input').addEventListener('change', function(e) {
   const file = e.target.files[0];
@@ -1647,6 +1666,10 @@ async function startAnalyze() {
   }
   if (!mp3File) {
     showToast('请上传音频文件');
+    return;
+  }
+  if (!lyrics) {
+    showToast('请提供歌词（通过 QQ 音乐链接解析、上传文件或手动输入）');
     return;
   }
   
