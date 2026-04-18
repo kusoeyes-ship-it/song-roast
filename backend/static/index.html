@@ -3006,11 +3006,6 @@ async function getLeaderboardData(period) {
       avg: item.avg.toFixed(2),
       roast: extractRoastEssence(worstReview)
     };
-      song: item.songName || '未命名',
-      artist: item.artistName || '未知',
-      avg: Math.round((item.dingTotal + item.liangTotal) / 2),
-      roast: extractRoastEssence(worstReview)
-    };
   });
 }
 

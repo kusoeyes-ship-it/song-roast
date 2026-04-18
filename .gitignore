@@ -3,3 +3,5 @@ backend/uploads/*
 backend/reviews.db
 backend/server.log
 .workbuddy/
+deploy-package/
+song-roast-deploy.tar.gz
