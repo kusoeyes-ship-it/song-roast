@@ -615,42 +615,131 @@ def generate_liang_review(song_info: str, lyrics: str, has_audio: bool) -> dict:
 
 
 async def call_hunyuan(system_prompt: str, user_prompt: str) -> dict:
-    """调用腾讯混元 API"""
+    """调用腾讯混元 API（完整 TC3-HMAC-SHA256 签名）"""
     import urllib.request
     import hmac
-    import hashlib
+    import hashlib as hs
     import time as time_mod
+    from datetime import datetime as dt, timezone
 
-    # 简化版调用 - 实际项目需要完善签名
+    secret_id = HUNYUAN_SECRET_ID
+    secret_key = HUNYUAN_SECRET_KEY
+    model = os.environ.get("HUNYUAN_MODEL", "hunyuan-lite")
+
+    if not secret_id or not secret_key:
+        logger.warning("Hunyuan credentials not set, falling back to builtin")
+        return await call_builtin_llm(system_prompt, user_prompt)
+
     try:
+        service = "hunyuan"
+        host = "hunyuan.tencentcloudapi.com"
+        action = "ChatCompletions"
+        version = "2023-09-01"
+        region = "ap-guangzhou"
+        algorithm = "TC3-HMAC-SHA256"
+
+        timestamp = int(time_mod.time())
+        date = dt.fromtimestamp(timestamp, tz=timezone.utc).strftime("%Y-%m-%d")
+
+        # Build request payload
         payload = {
-            "Model": "hunyuan-lite",
+            "Model": model,
             "Messages": [
                 {"Role": "system", "Content": system_prompt},
                 {"Role": "user", "Content": user_prompt}
             ],
             "Temperature": 0.9,
             "TopP": 0.9,
+            "Stream": False,
+        }
+        payload_json = json.dumps(payload)
+
+        # ===== Step 1: Build Canonical Request =====
+        http_request_method = "POST"
+        canonical_uri = "/"
+        canonical_querystring = ""
+        ct = "application/json; charset=utf-8"
+        canonical_headers = f"content-type:{ct}\nhost:{host}\nx-tc-action:{action.lower()}\n"
+        signed_headers = "content-type;host;x-tc-action"
+        hashed_payload = hs.sha256(payload_json.encode("utf-8")).hexdigest()
+        canonical_request = (
+            f"{http_request_method}\n{canonical_uri}\n{canonical_querystring}\n"
+            f"{canonical_headers}\n{signed_headers}\n{hashed_payload}"
+        )
+
+        # ===== Step 2: Build String to Sign =====
+        credential_scope = f"{date}/{service}/tc3_request"
+        hashed_canonical = hs.sha256(canonical_request.encode("utf-8")).hexdigest()
+        string_to_sign = f"{algorithm}\n{timestamp}\n{credential_scope}\n{hashed_canonical}"
+
+        # ===== Step 3: Calculate Signature =====
+        def _hmac_sha256(key: bytes, msg: str) -> bytes:
+            return hmac.new(key, msg.encode("utf-8"), hs.sha256).digest()
+
+        secret_date = _hmac_sha256(("TC3" + secret_key).encode("utf-8"), date)
+        secret_service = _hmac_sha256(secret_date, service)
+        secret_signing = _hmac_sha256(secret_service, "tc3_request")
+        signature = hmac.new(secret_signing, string_to_sign.encode("utf-8"), hs.sha256).hexdigest()
+
+        # ===== Step 4: Build Authorization Header =====
+        authorization = (
+            f"{algorithm} Credential={secret_id}/{credential_scope}, "
+            f"SignedHeaders={signed_headers}, Signature={signature}"
+        )
+
+        # ===== Step 5: Send Request =====
+        headers = {
+            "Authorization": authorization,
+            "Content-Type": ct,
+            "Host": host,
+            "X-TC-Action": action,
+            "X-TC-Timestamp": str(timestamp),
+            "X-TC-Version": version,
+            "X-TC-Region": region,
         }
 
-        data = json.dumps(payload).encode("utf-8")
+        data = payload_json.encode("utf-8")
         req = urllib.request.Request(
-            "https://hunyuan.tencentcloudapi.com",
+            f"https://{host}",
             data=data,
-            headers={
-                "Content-Type": "application/json",
-                "X-TC-Action": "ChatCompletions",
-                "X-TC-Version": "2023-09-01",
-                "X-TC-Region": "ap-guangzhou",
-            },
+            headers=headers,
             method="POST"
         )
 
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            result = json.loads(resp.read().decode())
-            content = result["Response"]["Choices"][0]["Message"]["Content"]
-            # 尝试解析 JSON
-            return json.loads(content)
+        logger.info(f"Calling Hunyuan API (model={model})...")
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            result = json.loads(resp.read().decode("utf-8"))
+
+        # Check for API errors
+        if "Response" in result and "Error" in result["Response"]:
+            err = result["Response"]["Error"]
+            logger.error(f"Hunyuan API error: {err}")
+            return await call_builtin_llm(system_prompt, user_prompt)
+
+        content = result["Response"]["Choices"][0]["Message"]["Content"]
+        logger.info(f"Hunyuan response received ({len(content)} chars)")
+
+        # Parse JSON from LLM response (handle markdown code blocks)
+        content = content.strip()
+        if content.startswith("```"):
+            content = content.split("\n", 1)[1] if "\n" in content else content[3:]
+            if content.endswith("```"):
+                content = content[:-3]
+            content = content.strip()
+
+        parsed = json.loads(content)
+
+        # Validate required fields
+        required = ["review", "scores", "total", "one_liner"]
+        for field in required:
+            if field not in parsed:
+                raise ValueError(f"Missing field: {field}")
+
+        return parsed
+
+    except json.JSONDecodeError as e:
+        logger.error(f"Hunyuan response not valid JSON: {e}, falling back to builtin")
+        return await call_builtin_llm(system_prompt, user_prompt)
     except Exception as e:
         logger.error(f"Hunyuan API failed: {e}, falling back to builtin")
         return await call_builtin_llm(system_prompt, user_prompt)
@@ -837,9 +926,16 @@ async def list_reviews(device_id: str = "anonymous", limit: int = 20):
 
 @app.get("/api/health")
 async def health():
-    return {"status": "ok", "version": "2.0", "llm_mode": LLM_MODE}
+    return {
+        "status": "ok",
+        "version": "2.1",
+        "llm_mode": LLM_MODE,
+        "hunyuan_configured": bool(HUNYUAN_SECRET_ID and HUNYUAN_SECRET_KEY),
+        "model": os.environ.get("HUNYUAN_MODEL", "hunyuan-lite"),
+    }
 
 
 # ====== Main ======
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8765, reload=False)
+    port = int(os.environ.get("PORT", 8765))
+    uvicorn.run(app, host="0.0.0.0", port=port, reload=False)

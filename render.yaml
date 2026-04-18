@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: song-roast-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: python3 app.py
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: LLM_MODE
+        value: hunyuan
+      - key: HUNYUAN_SECRET_ID
+        sync: false
+      - key: HUNYUAN_SECRET_KEY
+        sync: false
+      - key: HUNYUAN_MODEL
+        value: hunyuan-lite
+    plan: free
+    autoDeploy: true
