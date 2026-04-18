@@ -1501,9 +1501,10 @@ async function startAnalyze(mode) {
   }
 
   // Store for result
+  const qqMusicUrl = mode === 'link' ? (document.getElementById('link-input').value.trim() || '') : '';
   currentReview = {
-    songName, artistName, coverSrc, lyrics, mode,
-    timestamp: new Date().toISOString()
+    songName, artistName, coverSrc, lyrics, mode, qqMusicUrl,
+    timestamp: Date.now()
   };
 
   showPage('analyzing-page');
@@ -2269,17 +2270,21 @@ function saveToHistory(review) {
     songName: review.songName,
     artistName: review.artistName,
     coverSrc: review.coverSrc === DEFAULT_COVER ? null : review.coverSrc,
+    coverUrl: review.coverSrc || DEFAULT_COVER,
+    qqMusicUrl: review.qqMusicUrl || '',
     dingTotal: review.dingTotal,
     liangTotal: review.liangTotal,
     dingReview: review.dingReview,
     liangReview: review.liangReview,
     dingScores: review.dingScores,
     liangScores: review.liangScores,
-    timestamp: review.timestamp
+    timestamp: review.timestamp || Date.now()
   });
   // Keep last 50
   if (history.length > 50) history.length = 50;
   localStorage.setItem('lapin_history', JSON.stringify(history));
+  // 刷新排行榜
+  if (typeof refreshLeaderboard === 'function') refreshLeaderboard();
 }
 
 function renderHistory() {
@@ -2315,6 +2320,7 @@ function loadHistoryItem(id) {
     songName: item.songName,
     artistName: item.artistName,
     coverSrc: item.coverSrc || DEFAULT_COVER,
+    qqMusicUrl: item.qqMusicUrl || '',
     dingReview: item.dingReview,
     dingScores: item.dingScores,
     dingTotal: item.dingTotal,
@@ -2515,45 +2521,84 @@ function checkAndShowShameSong(avgScore) {
   section.style.display = 'block';
 }
 
-// ===== Leaderboard (排行榜) =====
-const LEADERBOARD_DATA = {
-  day: [
-    {rank:1, song:'星河入梦', artist:'林屿辰', dingScore:78, liangScore:85, songmid:'003OUlho2HcRHC', cover:'https://y.qq.com/music/photo_new/T002R300x300M000001SFBfe19Dxxp_1.jpg'},
-    {rank:2, song:'雾中花', artist:'苏念安', dingScore:72, liangScore:76, songmid:'0039MnYb0qxYhV', cover:'https://y.qq.com/music/photo_new/T002R300x300M000003Ow85E3IBAMK_1.jpg'},
-    {rank:3, song:'末班地铁', artist:'陈默白', dingScore:68, liangScore:71, songmid:'001BLpXF2DyJe2', cover:'https://y.qq.com/music/photo_new/T002R300x300M000000e1jdF1WPRUy_1.jpg'},
-    {rank:4, song:'退潮', artist:'沈舟', dingScore:55, liangScore:62, songmid:'002Neh8l0dcJDU', cover:'https://y.qq.com/music/photo_new/T002R300x300M000002KCMkR4237rY_1.jpg'},
-    {rank:5, song:'错位人生', artist:'何以歌', dingScore:45, liangScore:51, songmid:'004VfhFG1ExN5g', cover:'https://y.qq.com/music/photo_new/T002R300x300M000001VWwqZ3n4BpC_1.jpg'},
-  ],
-  week: [
-    {rank:1, song:'深海信号', artist:'莫亦寒', dingScore:82, liangScore:88, songmid:'001aGMk91dCcFO', cover:'https://y.qq.com/music/photo_new/T002R300x300M000004UfJWk2VcNKy_1.jpg'},
-    {rank:2, song:'锈', artist:'齐声', dingScore:76, liangScore:79, songmid:'0039MnYb0qxYhV', cover:'https://y.qq.com/music/photo_new/T002R300x300M000001h0cDR2OVBbN_1.jpg'},
-    {rank:3, song:'纸飞机', artist:'温以澄', dingScore:70, liangScore:74, songmid:'000YoEfh1kT29y', cover:'https://y.qq.com/music/photo_new/T002R300x300M000003Ow85E3IBAMK_1.jpg'},
-    {rank:4, song:'空城', artist:'夜行者', dingScore:62, liangScore:58, songmid:'003xKCfC3aqeFC', cover:'https://y.qq.com/music/photo_new/T002R300x300M000001SFBfe19Dxxp_1.jpg'},
-    {rank:5, song:'告别练习', artist:'柏安', dingScore:48, liangScore:53, songmid:'001tGkip1VDTUE', cover:'https://y.qq.com/music/photo_new/T002R300x300M000000e1jdF1WPRUy_1.jpg'},
-  ],
-  month: [
-    {rank:1, song:'钛合金心脏', artist:'赵鹿屿', dingScore:85, liangScore:91, songmid:'001aGMk91dCcFO', cover:'https://y.qq.com/music/photo_new/T002R300x300M000002jLMOr09IVhp_1.jpg'},
-    {rank:2, song:'银河修理工', artist:'程北', dingScore:80, liangScore:83, songmid:'003OUlho2HcRHC', cover:'https://y.qq.com/music/photo_new/T002R300x300M000004UfJWk2VcNKy_1.jpg'},
-    {rank:3, song:'落日快递', artist:'苏念安', dingScore:75, liangScore:78, songmid:'0039MnYb0qxYhV', cover:'https://y.qq.com/music/photo_new/T002R300x300M000001h0cDR2OVBbN_1.jpg'},
-    {rank:4, song:'云端邮局', artist:'林屿辰', dingScore:71, liangScore:69, songmid:'002Neh8l0dcJDU', cover:'https://y.qq.com/music/photo_new/T002R300x300M000003Ow85E3IBAMK_1.jpg'},
-    {rank:5, song:'黑胶唱片', artist:'夜行者', dingScore:58, liangScore:65, songmid:'003xKCfC3aqeFC', cover:'https://y.qq.com/music/photo_new/T002R300x300M000000e1jdF1WPRUy_1.jpg'},
-  ]
-};
+// ===== Leaderboard (排行榜) - 基于真实提交数据 =====
+
+function getLeaderboardData(period) {
+  // 从 localStorage 读取所有历史评测记录
+  const allHistory = JSON.parse(localStorage.getItem('lapin_history') || '[]');
+  if (!allHistory.length) return [];
+  
+  // 按时间范围过滤
+  const now = new Date();
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const startOfWeek = startOfDay - (now.getDay() || 7) * 86400000 + 86400000; // 本周一
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+  
+  let cutoff;
+  if (period === 'day') cutoff = startOfDay;
+  else if (period === 'week') cutoff = startOfWeek;
+  else cutoff = startOfMonth;
+  
+  // 过滤时间范围内的记录
+  const filtered = allHistory.filter(item => {
+    let ts = item.timestamp || 0;
+    // 兼容 ISO 字符串和毫秒数
+    if (typeof ts === 'string') ts = new Date(ts).getTime();
+    return ts >= cutoff && item.dingTotal && item.liangTotal;
+  });
+  
+  if (!filtered.length) return [];
+  
+  // 按均分降序排列，取前 10
+  filtered.sort((a, b) => {
+    const avgA = (a.dingTotal + a.liangTotal) / 2;
+    const avgB = (b.dingTotal + b.liangTotal) / 2;
+    return avgB - avgA;
+  });
+  
+  return filtered.slice(0, 10).map((item, i) => ({
+    rank: i + 1,
+    song: item.songName || '未命名',
+    artist: item.artistName || '未知',
+    dingScore: item.dingTotal || 0,
+    liangScore: item.liangTotal || 0,
+    cover: item.coverUrl || DEFAULT_COVER,
+    qqMusicUrl: item.qqMusicUrl || ''
+  }));
+}
+
+let currentLeaderboardPeriod = 'day';
 
 function switchLeaderboard(period, btn) {
   document.querySelectorAll('.lb-tab').forEach(t => t.classList.remove('active'));
   if (btn) btn.classList.add('active');
+  currentLeaderboardPeriod = period;
   renderLeaderboard(period);
 }
 
 function renderLeaderboard(period) {
-  const data = LEADERBOARD_DATA[period] || LEADERBOARD_DATA.day;
+  const data = getLeaderboardData(period);
   const container = document.getElementById('leaderboard-list');
+  
+  if (!data.length) {
+    const periodName = period === 'day' ? '今日' : period === 'week' ? '本周' : '本月';
+    container.innerHTML = `
+      <div style="text-align:center;padding:30px 20px;color:var(--text-dim);">
+        <div style="font-size:36px;margin-bottom:12px;opacity:0.5">🎵</div>
+        <div style="font-size:14px;line-height:1.6;">
+          ${periodName}还没有人提交评测<br>
+          <span style="font-size:12px;opacity:0.7">成为第一个勇者，提交你的作品吧！</span>
+        </div>
+      </div>
+    `;
+    return;
+  }
   
   container.innerHTML = data.map((item, i) => {
     const rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : 'normal';
     const avg = Math.round((item.dingScore + item.liangScore) / 2);
-    const listenUrl = 'https://y.qq.com/n/ryqq/songDetail/' + item.songmid;
+    const listenUrl = item.qqMusicUrl || '#';
+    const listenAttr = item.qqMusicUrl ? `href="${listenUrl}" target="_blank"` : 'href="#" onclick="return false" style="opacity:0.3;cursor:default"';
     return `
       <div class="lb-item">
         <div class="lb-rank ${rankClass}">${item.rank}</div>
@@ -2566,10 +2611,15 @@ function renderLeaderboard(period) {
           <span class="lb-score-d">🔥${item.dingScore}</span>
           <span class="lb-score-l">🗡️${item.liangScore}</span>
         </div>
-        <a href="${listenUrl}" target="_blank" class="lb-listen" title="试听">▶</a>
+        <a ${listenAttr} class="lb-listen" title="试听">▶</a>
       </div>
     `;
   }).join('');
+}
+
+// 排行榜刷新（在每次保存记录后调用）
+function refreshLeaderboard() {
+  renderLeaderboard(currentLeaderboardPeriod);
 }
 
 // Init leaderboard on page load
