@@ -1441,8 +1441,8 @@ document.getElementById('cover-input').addEventListener('change', function(e) {
   reader.readAsDataURL(file);
 });
 
-// ===== Link Parse (Demo) =====
-function parseLinkAndPreview() {
+// ===== Link Parse (Real QQ Music API) =====
+async function parseLinkAndPreview() {
   const link = document.getElementById('qq-link').value.trim();
   if (!link) {
     showToast('请先粘贴 QQ 音乐链接');
@@ -1455,22 +1455,115 @@ function parseLinkAndPreview() {
     return;
   }
   
-  showToast('🔍 正在解析链接…');
+  const btn = document.getElementById('btn-parse-link');
+  btn.textContent = '🔍 正在解析…';
+  btn.disabled = true;
+  showToast('🔍 正在解析 QQ 音乐链接…');
   
-  // Demo: simulate API response
-  setTimeout(() => {
-    document.getElementById('link-cover-preview').src = DEFAULT_COVER;
-    document.getElementById('link-song-name').textContent = '月光下的忧伤';
-    document.getElementById('link-artist-name').textContent = '独立音乐人Demo';
-    document.getElementById('link-lyrics').value = 
-      '月光穿过窗帘的缝隙\n你的影子还留在这里\n我以为遗忘是件容易的事\n却在每个深夜想起你\n\n副歌：\n我们之间隔着一整个银河\n你在那头 我在这头\n满天星光都是我说不出口的话';
+  // 尝试调用后端真实解析
+  let parsed = null;
+  try {
+    const resp = await fetch(API_BASE + '/api/parse-link', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: 'qq_music_url=' + encodeURIComponent(link),
+      signal: AbortSignal.timeout(15000),
+    });
+    if (resp.ok) {
+      parsed = await resp.json();
+    }
+  } catch(e) {
+    console.warn('后端解析失败，尝试前端解析:', e);
+  }
+
+  // 如果后端不可用，尝试前端直接解析（有限能力）
+  if (!parsed) {
+    parsed = await parseLinkFrontend(link);
+  }
+
+  if (parsed && parsed.song_name && parsed.song_name !== '未知歌曲') {
+    // 真实数据
+    document.getElementById('link-cover-preview').src = parsed.cover_url || DEFAULT_COVER;
+    document.getElementById('link-song-name').textContent = parsed.song_name;
+    document.getElementById('link-artist-name').textContent = parsed.artist_name || '未知歌手';
+    document.getElementById('link-lyrics').value = parsed.lyrics || '（未获取到歌词，请手动粘贴）';
+    if (parsed.album_name) {
+      document.getElementById('link-artist-name').textContent += '  ·  ' + parsed.album_name;
+    }
     document.getElementById('link-preview').style.display = 'block';
-    
-    // Change button to submit
-    const btn = document.getElementById('btn-parse-link');
-    btn.textContent = '🚀 开始辣评';
-    btn.onclick = () => startAnalyze('link');
-  }, 1000);
+    showToast('✅ 解析成功！请检查歌词是否完整');
+  } else {
+    // 解析失败，让用户手动填写
+    document.getElementById('link-cover-preview').src = DEFAULT_COVER;
+    document.getElementById('link-song-name').textContent = '（解析失败，请手动填写）';
+    document.getElementById('link-artist-name').textContent = '';
+    document.getElementById('link-lyrics').value = '';
+    document.getElementById('link-preview').style.display = 'block';
+    // 让歌名和歌手变为可编辑
+    document.getElementById('link-song-name').setAttribute('contenteditable', 'true');
+    document.getElementById('link-song-name').style.border = '1px dashed #ff6b6b';
+    document.getElementById('link-song-name').style.padding = '4px 8px';
+    document.getElementById('link-artist-name').setAttribute('contenteditable', 'true');
+    document.getElementById('link-artist-name').style.border = '1px dashed #4ecdc4';
+    document.getElementById('link-artist-name').style.padding = '4px 8px';
+    showToast('⚠️ 自动解析失败，请手动填写歌曲信息和歌词');
+  }
+
+  // Change button to submit
+  btn.textContent = '🚀 开始辣评';
+  btn.disabled = false;
+  btn.onclick = () => startAnalyze('link');
+}
+
+// 前端直接解析（从 URL 提取 songmid，直接调 QQ 音乐公开接口）
+async function parseLinkFrontend(url) {
+  // 提取 songmid
+  const patterns = [
+    /songDetail\/([a-zA-Z0-9]+)/,
+    /songmid=([a-zA-Z0-9]+)/,
+    /song\/([a-zA-Z0-9]{10,})/,
+  ];
+  let songmid = null;
+  for (const p of patterns) {
+    const m = url.match(p);
+    if (m) { songmid = m[1]; break; }
+  }
+  if (!songmid) return null;
+
+  // 尝试直接请求 musicu.fcg（可能被 CORS 拦截）
+  try {
+    const payload = {
+      comm: {ct:24, cv:0},
+      songinfo: {
+        method: 'get_song_detail_yqq',
+        module: 'music.pf_song_detail_svr',
+        param: {song_type:0, song_mid:songmid}
+      }
+    };
+    const resp = await fetch('https://u.y.qq.com/cgi-bin/musicu.fcg', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(8000),
+    });
+    const data = await resp.json();
+    const track = data?.songinfo?.data?.track_info;
+    if (track) {
+      const artists = (track.singer || []).map(s => s.name).join('/');
+      const albumMid = track.album?.mid || '';
+      const cover = albumMid ? `https://y.qq.com/music/photo_new/T002R300x300M000${albumMid}.jpg` : '';
+      return {
+        song_name: track.name || '未知歌曲',
+        artist_name: artists || '未知歌手',
+        album_name: track.album?.name || '',
+        cover_url: cover,
+        songmid: track.mid || songmid,
+        lyrics: '', // CORS 限制，前端拿不到歌词
+      };
+    }
+  } catch(e) {
+    console.warn('前端直接解析也失败:', e);
+  }
+  return null;
 }
 
 // ===== Start Analysis =====
@@ -1478,10 +1571,18 @@ async function startAnalyze(mode) {
   let songName, artistName, coverSrc, lyrics, coverDataUrl;
 
   if (mode === 'link') {
-    songName = document.getElementById('link-song-name').textContent;
-    artistName = document.getElementById('link-artist-name').textContent;
+    songName = document.getElementById('link-song-name').textContent.trim();
+    artistName = document.getElementById('link-artist-name').textContent.trim().split('  ·  ')[0]; // 去掉专辑名
     coverSrc = document.getElementById('link-cover-preview').src;
     lyrics = document.getElementById('link-lyrics').value;
+    if (!songName || songName === '（解析失败，请手动填写）') {
+      showToast('请填写歌曲名称');
+      return;
+    }
+    if (!lyrics.trim()) {
+      showToast('请粘贴歌词内容');
+      return;
+    }
   } else {
     songName = document.getElementById('upload-song-name').value.trim();
     artistName = document.getElementById('upload-artist').value.trim();
@@ -1501,7 +1602,7 @@ async function startAnalyze(mode) {
   }
 
   // Store for result
-  const qqMusicUrl = mode === 'link' ? (document.getElementById('link-input').value.trim() || '') : '';
+  const qqMusicUrl = mode === 'link' ? (document.getElementById('qq-link').value.trim() || '') : '';
   currentReview = {
     songName, artistName, coverSrc, lyrics, mode, qqMusicUrl,
     timestamp: Date.now()

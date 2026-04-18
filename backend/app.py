@@ -13,6 +13,9 @@ import hashlib
 import asyncio
 import logging
 import re
+import base64
+import urllib.request
+import urllib.parse
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -821,6 +824,192 @@ async def analyze_upload(
         "ding": ding_result,
         "liang": liang_result,
     }
+
+
+@app.post("/api/parse-link")
+async def parse_qq_link(qq_music_url: str = Form("")):
+    """解析 QQ 音乐链接，返回真实歌曲信息 + 歌词"""
+
+    if not qq_music_url:
+        raise HTTPException(400, "请提供 QQ 音乐链接")
+
+    # Step 1: 从链接中提取 songmid 或 songid
+    songmid = None
+    songid = None
+
+    # 处理短链接重定向 (c.y.qq.com -> y.qq.com)
+    url = qq_music_url.strip()
+    if 'c.y.qq.com' in url or 'i.y.qq.com' in url:
+        try:
+            req = urllib.request.Request(url, method='HEAD')
+            req.add_header('User-Agent', 'Mozilla/5.0')
+            resp = urllib.request.urlopen(req, timeout=5)
+            url = resp.geturl()
+        except Exception:
+            pass  # Use original URL
+
+    # 多种链接格式匹配
+    patterns = [
+        r'songDetail/([a-zA-Z0-9]+)',        # /n/ryqq/songDetail/{mid}
+        r'songmid=([a-zA-Z0-9]+)',             # ?songmid={mid}
+        r'song/([a-zA-Z0-9]{10,})',            # /song/{mid}
+        r'/(\d{5,})\.html',                    # /123456.html (songid)
+        r'songid=(\d+)',                       # ?songid={id}
+        r'id=(\d+)',                           # ?id={id}
+    ]
+
+    for pattern in patterns:
+        m = re.search(pattern, url)
+        if m:
+            val = m.group(1)
+            if val.isdigit():
+                songid = val
+            else:
+                songmid = val
+            break
+
+    if not songmid and not songid:
+        raise HTTPException(400, "无法从链接中解析歌曲信息，请确认链接格式正确")
+
+    logger.info(f"Parsed from URL: songmid={songmid}, songid={songid}")
+
+    # Step 2: 调用 QQ 音乐 musicu.fcg 获取歌曲详情
+    try:
+        song_info = await _fetch_song_detail(songmid=songmid, songid=songid)
+    except Exception as e:
+        logger.error(f"Failed to fetch song detail: {e}")
+        raise HTTPException(500, f"获取歌曲信息失败: {str(e)}")
+
+    # Step 3: 获取歌词
+    lyrics = ""
+    try:
+        if song_info.get("songmid"):
+            lyrics = await _fetch_lyrics(song_info["songmid"])
+    except Exception as e:
+        logger.warning(f"Failed to fetch lyrics: {e}")
+
+    return {
+        "song_name": song_info.get("song_name", "未知歌曲"),
+        "artist_name": song_info.get("artist_name", "未知歌手"),
+        "cover_url": song_info.get("cover_url", ""),
+        "album_name": song_info.get("album_name", ""),
+        "songmid": song_info.get("songmid", ""),
+        "lyrics": lyrics,
+    }
+
+
+async def _fetch_song_detail(songmid=None, songid=None):
+    """通过 musicu.fcg 获取歌曲详情"""
+    # 构建请求参数
+    if songmid:
+        song_param = {"songmid": [songmid]}
+    elif songid:
+        song_param = {"songid": [int(songid)]}
+    else:
+        raise ValueError("需要 songmid 或 songid")
+
+    payload = {
+        "songinfo": {
+            "method": "get_song_detail_yqq",
+            "module": "music.pf_song_detail_svr",
+            "param": {
+                "song_type": 0,
+                "song_mid": songmid or "",
+                "song_id": int(songid) if songid else 0,
+            }
+        }
+    }
+
+    # 如果只有 songmid, 用另一种更简单的接口
+    if songmid:
+        payload = {
+            "comm": {"ct": 24, "cv": 0},
+            "songinfo": {
+                "method": "get_song_detail_yqq",
+                "module": "music.pf_song_detail_svr",
+                "param": {"song_type": 0, "song_mid": songmid}
+            }
+        }
+    else:
+        payload = {
+            "comm": {"ct": 24, "cv": 0},
+            "songinfo": {
+                "method": "get_song_detail_yqq",
+                "module": "music.pf_song_detail_svr",
+                "param": {"song_type": 0, "song_id": int(songid)}
+            }
+        }
+
+    url = "https://u.y.qq.com/cgi-bin/musicu.fcg"
+    data = json.dumps(payload).encode('utf-8')
+
+    req = urllib.request.Request(url, data=data, method='POST')
+    req.add_header('Content-Type', 'application/json')
+    req.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
+    req.add_header('Referer', 'https://y.qq.com/')
+    req.add_header('Origin', 'https://y.qq.com')
+
+    loop = asyncio.get_event_loop()
+    resp = await loop.run_in_executor(None, lambda: urllib.request.urlopen(req, timeout=10))
+    body = json.loads(resp.read().decode('utf-8'))
+
+    track = body.get("songinfo", {}).get("data", {}).get("track_info", {})
+    if not track:
+        raise ValueError("未找到歌曲信息")
+
+    # 提取歌手名（可能有多个歌手）
+    singers = track.get("singer", [])
+    artist_name = "/".join([s.get("name", "") for s in singers]) if singers else "未知歌手"
+
+    # 封面图: album mid -> 图片URL
+    album_mid = track.get("album", {}).get("mid", "")
+    cover_url = f"https://y.qq.com/music/photo_new/T002R300x300M000{album_mid}.jpg" if album_mid else ""
+
+    return {
+        "song_name": track.get("name", "未知歌曲"),
+        "artist_name": artist_name,
+        "album_name": track.get("album", {}).get("name", ""),
+        "cover_url": cover_url,
+        "songmid": track.get("mid", songmid or ""),
+        "songid": track.get("id", songid or ""),
+    }
+
+
+async def _fetch_lyrics(songmid):
+    """获取歌词（通过 fcg_query_lyric_new.fcg）"""
+    url = f"https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric_new.fcg?songmid={songmid}&format=json&nobase64=0"
+
+    req = urllib.request.Request(url)
+    req.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
+    req.add_header('Referer', 'https://y.qq.com/portal/player.html')
+
+    loop = asyncio.get_event_loop()
+    resp = await loop.run_in_executor(None, lambda: urllib.request.urlopen(req, timeout=10))
+    body = json.loads(resp.read().decode('utf-8'))
+
+    lyric_base64 = body.get("lyric", "")
+    if not lyric_base64:
+        return ""
+
+    # Base64 解码
+    try:
+        lyric_raw = base64.b64decode(lyric_base64).decode('utf-8')
+    except Exception:
+        return ""
+
+    # 去除 LRC 时间标签 [xx:xx.xx]，只留纯歌词文本
+    lines = lyric_raw.split('\n')
+    clean_lines = []
+    for line in lines:
+        # 去除 [xx:xx.xx] 格式的时间戳
+        text = re.sub(r'\[\d{2}:\d{2}\.\d{2,3}\]', '', line).strip()
+        # 去除 [ti:xxx] [ar:xxx] 等元信息标签
+        if re.match(r'^\[.+:.+\]$', text):
+            continue
+        if text:
+            clean_lines.append(text)
+
+    return '\n'.join(clean_lines)
 
 
 @app.post("/api/analyze/link")
