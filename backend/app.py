@@ -897,11 +897,11 @@ async def serve_index():
     # Priority 1: backend/static/index.html (Render deployment structure)
     static_index = BASE_DIR / "static" / "index.html"
     if static_index.exists():
-        return FileResponse(str(static_index))
+        return FileResponse(str(static_index), headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
     # Priority 2: project root index.html (local development)
     root_index = BASE_DIR.parent / "index.html"
     if root_index.exists():
-        return FileResponse(str(root_index))
+        return FileResponse(str(root_index), headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
     return JSONResponse({"message": "Frontend not found"}, status_code=404)
 
 

@@ -3,7 +3,7 @@ services:
     name: song-roast-backend
     runtime: python
     rootDir: backend
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install --no-cache-dir -r requirements.txt
     startCommand: python3 app.py
     envVars:
       - key: PORT
