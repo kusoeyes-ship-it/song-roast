@@ -893,11 +893,16 @@ async def call_hunyuan(system_prompt: str, user_prompt: str) -> dict:
 
 @app.get("/")
 async def serve_index():
-    """Serve frontend"""
-    index_path = BASE_DIR.parent / "index.html"
-    if index_path.exists():
-        return FileResponse(str(index_path))
-    return {"message": "Frontend not found. Place index.html in project root."}
+    """Serve frontend - check multiple possible locations"""
+    # Priority 1: backend/static/index.html (Render deployment structure)
+    static_index = BASE_DIR / "static" / "index.html"
+    if static_index.exists():
+        return FileResponse(str(static_index))
+    # Priority 2: project root index.html (local development)
+    root_index = BASE_DIR.parent / "index.html"
+    if root_index.exists():
+        return FileResponse(str(root_index))
+    return JSONResponse({"message": "Frontend not found"}, status_code=404)
 
 
 def _find_existing_review(song_name: str, artist_name: str):
